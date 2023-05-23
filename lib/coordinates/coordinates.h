@@ -2,7 +2,7 @@
 
 #include <array>
 #include <cstdint>
-#include <optional>
+// #include <optional>
 
 // Latitude and Longitude in decimal format.
 // +Lat = N, -Lat = S
@@ -54,5 +54,5 @@ PlayaCoords LatLonToPlayaCoords(const PlayaMapConfig& pmc, const LatLon& in);
 // o'clock.
 bool IsAddressable(const PlayaMapConfig& pmc, const PlayaCoords& pc);
 
-std::optional<PlayaAddress> PlayaCoordsToAddress(const PlayaMapConfig& pmc,
-                                                 const PlayaCoords& pc);
+// std::optional<PlayaAddress> PlayaCoordsToAddress(const PlayaMapConfig& pmc,
+//                                                  const PlayaCoords& pc);

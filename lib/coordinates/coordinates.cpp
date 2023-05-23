@@ -1,6 +1,7 @@
 #include "coordinates.h"
 
 #include <cmath>
+// #include <optional>
 
 namespace {
 
@@ -76,32 +77,32 @@ bool IsAddressable(const PlayaMapConfig& pmc, const PlayaCoords& pc) {
          !(pc.angle_deg > angle_10_deg && pc.angle_deg < angle_2_deg);
 }
 
-std::optional<PlayaAddress> PlayaCoordsToAddress(const PlayaMapConfig& pmc,
-                                                 const PlayaCoords& pc) {
-  if (!IsAddressable(pmc, pc)) return std::nullopt;
-  PlayaAddress address;
-  double clock_decimal = pc.angle_deg / 360.0 * 12.0;
-  if (clock_decimal < 0.0) clock_decimal += 12.0;
-  address.hour = static_cast<uint8_t>(clock_decimal);
-  if (address.hour == 0) address.hour = 12;
-  address.minute = static_cast<uint8_t>((clock_decimal - address.hour) * 60);
-  address.minute =
-      RoundUpToNearestMultiple(address.minute, 5);  // Round to nearest 5 mins.
-  if (address.minute == 60) address.minute = 0;
+// std::optional<PlayaAddress> PlayaCoordsToAddress(const PlayaMapConfig& pmc,
+//                                                  const PlayaCoords& pc) {
+//   if (!IsAddressable(pmc, pc)) return std::nullopt;
+//   PlayaAddress address;
+//   double clock_decimal = pc.angle_deg / 360.0 * 12.0;
+//   if (clock_decimal < 0.0) clock_decimal += 12.0;
+//   address.hour = static_cast<uint8_t>(clock_decimal);
+//   if (address.hour == 0) address.hour = 12;
+//   address.minute = static_cast<uint8_t>((clock_decimal - address.hour) * 60);
+//   address.minute =
+//       RoundUpToNearestMultiple(address.minute, 5);  // Round to nearest 5 mins.
+//   if (address.minute == 60) address.minute = 0;
 
-  constexpr double kBoundaryPadding_m = 50;
-  for (int i = 0; i < pmc.roads.size(); ++i) {
-    double r_before = i == 0 ? pmc.roads[0].radius_m - kBoundaryPadding_m
-                             : pmc.roads[i].radius_m;
-    double r_after = i < (pmc.roads.size() - 1)
-                         ? r_after = pmc.roads[i + 1].radius_m
-                         : r_after = r_before + kBoundaryPadding_m;
-    const double r_mid = (r_before + r_after) / 2.0;
-    if (pc.radius_m < r_mid) {
-      address.road = pmc.roads[i].road;
-      break;
-    }
-  }
+//   constexpr double kBoundaryPadding_m = 50;
+//   for (int i = 0; i < pmc.roads.size(); ++i) {
+//     double r_before = i == 0 ? pmc.roads[0].radius_m - kBoundaryPadding_m
+//                              : pmc.roads[i].radius_m;
+//     double r_after = i < (pmc.roads.size() - 1)
+//                          ? r_after = pmc.roads[i + 1].radius_m
+//                          : r_after = r_before + kBoundaryPadding_m;
+//     const double r_mid = (r_before + r_after) / 2.0;
+//     if (pc.radius_m < r_mid) {
+//       address.road = pmc.roads[i].road;
+//       break;
+//     }
+//   }
 
-  return address;
-}
+//   return address;
+// }
