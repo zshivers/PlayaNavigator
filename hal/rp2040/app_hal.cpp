@@ -5,7 +5,6 @@
 #include "lvgl.h"
 #include "pico/time.h"
 #include "st7567.hpp"
-#include "TinyGPS++.h"
 
 constexpr int kDisplayWidth = 128;
 constexpr int kDisplayHeight = 64;
@@ -19,22 +18,13 @@ ST7567::Options kDisplayOptions = {
     .mosi_pin = 19,
     .dc_pin = 20,
     .reset_pin = 21,
-    .backlight_pin = 9,
 };
 
 ST7567 display(kDisplayOptions);
 lv_disp_drv_t disp_drv;
 
-UART gps_uart(4, 5);
-
-TinyGPSPlus gps;
-
 void display_flush_cb(lv_disp_drv_t *disp_drv, const lv_area_t *area,
                       lv_color_t *color_p) {
-  //   Serial.println("Flush: area");
-  //   Serial.println(String(area->x1) + " " + String(area->y1));
-  //   Serial.println(String(area->x2) + " " + String(area->y2));
-
   for (int y = area->y1; y <= area->y2; y++) {
     for (int x = area->x1; x <= area->x2; x++) {
       display.put_px(x, y, color_p->full > 0);
@@ -56,15 +46,10 @@ void hal_setup(void) {
   gpio_set_dir(25, GPIO_OUT);
   gpio_put(25, true);
 
-  gps_uart.begin(115200);
-
   Serial.begin(115200);
   Serial.println("Setup");
 
   display.init();
-  display.set_backlight(50);
-  display.put_px(10, 10, true);
-  display.update();
 
   lv_log_register_print_cb(lv_log_cb);
 
@@ -89,17 +74,6 @@ void hal_loop(void) {
   led ^= 1;
 
   lv_task_handler();
-  lv_tick_inc(100);
-  sleep_ms(100);
-  
-  while (gps_uart.available() > 0) {
-    // Serial.print((char)gps_uart.read());
-    gps.encode(gps_uart.read());
-  }
-
-  Serial.println("Number of sats: " + String(gps.satellites.value()));
-  if (gps.time.isValid()) {
-    Serial.println("Time: " + String(gps.time.hour()) + ":" + String(gps.time.minute()) + ":" + String(gps.time.second()));
-  }
-  Serial.println("");
+  lv_tick_inc(50);
+  sleep_ms(50);
 }

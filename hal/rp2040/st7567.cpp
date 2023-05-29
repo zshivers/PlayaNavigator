@@ -14,7 +14,7 @@ enum reg : uint8_t {
   PAGESTART_MASK = 0x07,  //
   SETCOLL = 0x00,         // 0x00-0x0f: Set lower column address
   SETCOLH = 0x10,         // 0x10-0x1f: Set higher column address
-  SEG_DIR_NORMAL = 0xa0,  // 0xa0: Column address 0 is mapped to SEG0 
+  SEG_DIR_NORMAL = 0xa0,  // 0xa0: Column address 0 is mapped to SEG0
   SEG_DIR_REV = 0xa1,     // 0xa1: Column address 128 is mapped to S
   DISPNORMAL = 0xa6,      // 0xa6: Normal display
   DISPINVERSE = 0xa7,     // 0xa7: Inverse display
@@ -31,7 +31,7 @@ enum reg : uint8_t {
   SETCONTRAST = 0x81,     //  # 0x81: Set contrast cont
   SETBOOSTER = 0xf8,      // # Set booster level
   SETBOOSTER4X = 0x00,    // # Set booster level
-  SETBOOSTER5X = 0x01,    // 
+  SETBOOSTER5X = 0x01,    //
   NOP = 0xe3,             // # 0xe3: NOP Command for no operation
 };
 
@@ -60,11 +60,6 @@ void ST7567::init() {
   gpio_set_function(options_.sck_pin, GPIO_FUNC_SPI);
   gpio_set_function(options_.mosi_pin, GPIO_FUNC_SPI);
 
-  pwm_config cfg = pwm_get_default_config();
-  pwm_set_wrap(pwm_gpio_to_slice_num(options_.backlight_pin), 65535);
-  pwm_init(pwm_gpio_to_slice_num(options_.backlight_pin), &cfg, true);
-  gpio_set_function(options_.backlight_pin, GPIO_FUNC_PWM);
-
   reset();
 
   command(reg::BIAS_1_7);
@@ -77,8 +72,6 @@ void ST7567::init() {
   command(reg::DISPON);
   command(reg::SETCONTRAST);
   command(30);
-
-  set_backlight(0);
 }
 
 void ST7567::command(uint8_t command, size_t len, const uint8_t *data) {
@@ -113,18 +106,10 @@ void ST7567::update() {
     command(reg::SETCOLH);
     gpio_put(options_.dc_pin, 1);  // data mode
     gpio_put(options_.cs_pin, 0);
-    spi_write_blocking(options_.spi, &framebuffer_[page * options_.width], options_.width);
+    spi_write_blocking(options_.spi, &framebuffer_[page * options_.width],
+                       options_.width);
     gpio_put(options_.cs_pin, 1);
     gpio_put(options_.dc_pin, 0);  // Back to command mode
   }
   gpio_put(options_.cs_pin, 1);
-}
-
-void ST7567::set_backlight(uint8_t brightness) {
-  // gamma correct the provided 0-255 brightness value onto a
-  // 0-65535 range for the pwm counter
-  float gamma = 2.8;
-  uint16_t value =
-      (uint16_t)(pow((float)(brightness) / 255.0f, gamma) * 65535.0f + 0.5f);
-  pwm_set_gpio_level(options_.backlight_pin, value);
 }

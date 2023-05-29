@@ -10,7 +10,6 @@ class Button {
          uint32_t repeat_time = 200, uint32_t hold_time = 1000)
       : repeat_time(repeat_time),
         hold_time(hold_time) {
-
   };
   bool raw() { return false; }
   bool read() { return false; }
