@@ -2,7 +2,7 @@
 
 template <typename T>
 struct MaybeValid {
-    MaybeValid() : valid(false), value({}) {}
+    MaybeValid() : valid(false), value{} {}
     MaybeValid(bool valid, T value) : valid(valid), value(value) {}
     bool valid = false;
     T value = {};

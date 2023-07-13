@@ -17,11 +17,11 @@ int RoundUpToNearestMultiple(int in, int multiple) {
 }
 }  // namespace
 
-double distanceBetween(LatLon point1, LatLon point2) {
-  double& lat1 = point1.lat;
-  double& lat2 = point2.lat;
-  double& long1 = point1.lon;
-  double& long2 = point2.lon;
+double distanceBetween(const LatLon& point1, const LatLon& point2) {
+  double lat1 = point1.lat;
+  double lat2 = point2.lat;
+  double long1 = point1.lon;
+  double long2 = point2.lon;
   // returns distance in meters between two positions, both specified
   // as signed decimal-degrees latitude and longitude. Uses great-circle
   // distance computation for hypothetical sphere of radius 6372795 meters.
@@ -46,18 +46,16 @@ double distanceBetween(LatLon point1, LatLon point2) {
   return delta * kEarthRadius;
 }
 
-double courseTo(LatLon point1, LatLon point2) {
-  double& lat1 = point1.lat;
-  double& lat2 = point2.lat;
-  double& long1 = point1.lon;
-  double& long2 = point2.lon;
+double courseTo(const LatLon& point1, const LatLon& point2) {
+  const double lat1 = degToRad(point1.lat);
+  const double lat2 = degToRad(point2.lat);
+  const double long1 = point1.lon;
+  const double long2 = point2.lon;
   // returns course in degrees (North=0, West=-90, East=+90) from position 1 to
   // position 2, both specified as signed decimal-degrees latitude and
   // longitude. Because Earth is no exact sphere, calculated course may be off
   // by a tiny fraction. Courtesy of Maarten Lamers
   double dlon = degToRad(long2 - long1);
-  lat1 = degToRad(lat1);
-  lat2 = degToRad(lat2);
   double y = sin(dlon) * cos(lat2);
   double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dlon);
   return radToDeg(atan2(y, x));
@@ -71,14 +69,14 @@ PlayaCoords LatLonToPlayaCoords(const PlayaMapConfig& pmc, const LatLon& in) {
 }
 
 bool IsAddressable(const PlayaMapConfig& pmc, const PlayaCoords& pc) {
-  constexpr double angle_10_deg = (360.0 / 12) * -2.0;
-  constexpr double angle_2_deg = (360.0 / 12) * 2.0;
-  return pc.radius_m > pmc.esplanade_radius_m &&
-         pc.radius_m < pmc.last_road_radius_m &&
-         !(pc.angle_deg > angle_10_deg && pc.angle_deg < angle_2_deg);
+  constexpr double kTenOClock_deg = (360.0 / 12) * -2.0;
+  constexpr double kTwoOClock_deg = (360.0 / 12) * 2.0;
+  return pc.radius_m >= pmc.esplanade_radius_m &&
+         pc.radius_m <= pmc.last_road_radius_m &&
+         !(pc.angle_deg > kTenOClock_deg && pc.angle_deg < kTwoOClock_deg);
 }
 
-MaybeValid<PlayaAddress> LatLonToAddress(const PlayaMapConfig& pmc,
+PlayaAddress LatLonToAddress(const PlayaMapConfig& pmc,
                                          const LatLon& ll) {
   const PlayaCoords pc = LatLonToPlayaCoords(pmc, ll);
 
@@ -96,7 +94,7 @@ MaybeValid<PlayaAddress> LatLonToAddress(const PlayaMapConfig& pmc,
 
   if (!IsAddressable(pmc, pc)) {
     address.road = MakeInvalid<char>(' ');
-    return MakeValid<PlayaAddress>(address);
+    return address;
   }
 
   constexpr double kBoundaryPadding_m = 50;
@@ -113,5 +111,5 @@ MaybeValid<PlayaAddress> LatLonToAddress(const PlayaMapConfig& pmc,
     }
   }
 
-  return MakeValid<PlayaAddress>(address);
+  return address;
 }

@@ -9,8 +9,6 @@ class Backlight {
   void SetColor(uint8_t w, uint8_t r, uint8_t g, uint8_t b);
 
  private:
-  void UpdatePwm();
-
   const int led_w_pin_;
   const int led_r_pin_;
   const int led_g_pin_;

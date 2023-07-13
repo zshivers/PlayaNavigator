@@ -76,12 +76,11 @@ void ST7567::init() {
 
 void ST7567::command(uint8_t command, size_t len, const uint8_t *data) {
   gpio_put(options_.cs_pin, 0);
-
   gpio_put(options_.dc_pin, 0);  // command mode
   spi_write_blocking(options_.spi, &command, 1);
   gpio_put(options_.cs_pin, 1);
 
-  sleep_us(100);
+  sleep_us(10);
   if (data) {
     gpio_put(options_.cs_pin, 0);
     gpio_put(options_.dc_pin, 1);  // data mode
@@ -104,8 +103,8 @@ void ST7567::update() {
     command(reg::SETPAGESTART | page);
     command(reg::SETCOLL);
     command(reg::SETCOLH);
-    gpio_put(options_.dc_pin, 1);  // data mode
     gpio_put(options_.cs_pin, 0);
+    gpio_put(options_.dc_pin, 1);  // data mode
     spi_write_blocking(options_.spi, &framebuffer_[page * options_.width],
                        options_.width);
     gpio_put(options_.cs_pin, 1);

@@ -1,10 +1,16 @@
 #include <Arduino.h>
 
 #include "Serial.h"
+#include "hardware/clocks.h"
+#include "hardware/gpio.h"
+#include "hardware/pll.h"
 #include "hardware/spi.h"
 #include "lvgl.h"
 #include "pico/time.h"
+#include "power.h"
 #include "st7567.hpp"
+
+constexpr int kGpsPpsInputPin = 16;
 
 constexpr int kDisplayWidth = 128;
 constexpr int kDisplayHeight = 64;
@@ -41,18 +47,36 @@ void display_flush_cb(lv_disp_drv_t *disp_drv, const lv_area_t *area,
 
 void lv_log_cb(const char *buf) { Serial.println(String(buf, strlen(buf))); }
 
+void clock_setup() {
+  // Change clk_sys to be 48MHz. The simplest way is to take this from PLL_USB
+  // which has a source frequency of 48MHz
+  clock_configure(clk_sys, CLOCKS_CLK_SYS_CTRL_SRC_VALUE_CLKSRC_CLK_SYS_AUX,
+                  CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB, 48 * MHZ,
+                  48 * MHZ);
+
+  // Turn off PLL sys for good measure
+  pll_deinit(pll_sys);
+
+  // CLK peri is clocked from clk_sys so need to change clk_peri's freq
+  clock_configure(clk_peri, 0, CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLK_SYS,
+                  48 * MHZ, 48 * MHZ);
+}
+
 void hal_setup(void) {
+  clock_setup();
+
+  // Built-in LED off to save power.
   gpio_set_function(25, GPIO_FUNC_SIO);
   gpio_set_dir(25, GPIO_OUT);
-  gpio_put(25, true);
+  gpio_put(25, false);
 
   Serial.begin(115200);
-  Serial.println("Setup");
+  Serial.println("Playa Naviator GPS");
 
   display.init();
 
-  lv_log_register_print_cb(lv_log_cb);
-
+  // lv_log_register_print_cb(lv_log_cb);
+  
   lv_init();
 
   static lv_disp_draw_buf_t disp_buf;
@@ -69,11 +93,7 @@ void hal_setup(void) {
 }
 
 void hal_loop(void) {
-  static bool led = false;
-  gpio_put(25, led);
-  led ^= 1;
-
   lv_task_handler();
-  lv_tick_inc(50);
-  sleep_ms(50);
+  lv_tick_inc(5);
+  sleep_ms(5);
 }

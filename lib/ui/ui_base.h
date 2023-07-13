@@ -3,6 +3,8 @@
 
 #include "lvgl.h"
 
+// Common setup for all UI screens. Creates a window with a header, inverted background
+// and title text.
 class UiBase {
  public:
   UiBase();

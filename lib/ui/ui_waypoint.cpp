@@ -9,9 +9,6 @@
 #include "waypoint_storage.h"
 
 namespace {
-constexpr uint8_t kMaxTotalWaypoints = 5;
-constexpr int CANVAS_WIDTH = 40;
-constexpr int CANVAS_HEIGHT = 40;
 
 void rotate_points(lv_point_t point_in[], int point_count,
                    lv_point_t rotation_point, float angle_deg) {
@@ -53,49 +50,56 @@ LatLon FindNearestBathroom(LatLon current_location) {
 }
 }  // namespace
 
+// Draw a thick arrow to show direction to waypoint.
 // Angle convention:
 //   0 = Up
 //  90 = Right
 // 180 = Down
 // 270 = Left
 void UiWaypoint::draw_arrow(float angle_deg) {
-  lv_canvas_fill_bg(canvas_, lv_color_white(), LV_OPA_COVER);
+  lv_canvas_fill_bg(arrow_canvas_, lv_color_white(), LV_OPA_COVER);
 
-  static lv_draw_rect_dsc_t rect_dsc;
-  lv_draw_rect_dsc_init(&rect_dsc);
-  rect_dsc.bg_color = lv_color_black();
+  static lv_draw_rect_dsc_t dsc;
+  lv_draw_rect_dsc_init(&dsc);
+  dsc.bg_color = lv_color_black();
 
-  lv_point_t points[] = {
+  constexpr lv_point_t kCanvasCenter = {kCanvasWidth / 2, kCanvasHeight / 2};
+
+  // Since the LVGL library can only draw convex shapes, split the arrow into
+  // two parts: The triangle (tip of the arrow) and a rectancgle (base of the
+  // arrow).
+  lv_point_t tip_points[] = {
       {14, 0},
       {0, 22},
       {28, 22},
   };
-  translate_points(points, 3, {6, 0});
-  rotate_points(points, 3, {CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2}, angle_deg);
-  lv_canvas_draw_polygon(canvas_, points, 3, &rect_dsc);
+  translate_points(tip_points, 3, {6, 0});
+  rotate_points(tip_points, 3, kCanvasCenter, angle_deg);
+  lv_canvas_draw_polygon(arrow_canvas_, tip_points, 3, &dsc);
 
-  lv_point_t points2[] = {
+  lv_point_t base_points[] = {
       {8, 20},
       {8, 40},
       {20, 40},
       {20, 20},
   };
-  translate_points(points2, 4, {6, 0});
-  rotate_points(points2, 4, {CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2}, angle_deg);
-  lv_canvas_draw_polygon(canvas_, points2, 4, &rect_dsc);
+  translate_points(base_points, 4, {6, 0});
+  rotate_points(base_points, 4, kCanvasCenter, angle_deg);
+  lv_canvas_draw_polygon(arrow_canvas_, base_points, 4, &dsc);
 }
 
+// Draw a filled-in circle in the middle of the canvas.
 void UiWaypoint::draw_circle() {
-  static lv_draw_arc_dsc_t arc_dsc;
-  lv_draw_arc_dsc_init(&arc_dsc);
-  arc_dsc.color = lv_color_black();
-  arc_dsc.width = 15;
+  static lv_draw_arc_dsc_t dsc;
+  lv_draw_arc_dsc_init(&dsc);
+  dsc.color = lv_color_black();
+  dsc.width = 15;
 
-  lv_canvas_fill_bg(canvas_, lv_color_white(), LV_OPA_COVER);
+  lv_canvas_fill_bg(arrow_canvas_, lv_color_white(), LV_OPA_COVER);
   // The only way to draw a circle on a canvas is to draw an arc with a thick
   // border.
-  lv_canvas_draw_arc(canvas_, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, 15, 0, 360,
-                     &arc_dsc);
+  lv_canvas_draw_arc(arrow_canvas_, kCanvasWidth / 2, kCanvasHeight / 2, 15, 0,
+                     360, &dsc);
 }
 
 UiWaypoint::UiWaypoint(Backlight* backlight) : UiBase(), backlight_(backlight) {
@@ -114,11 +118,8 @@ UiWaypoint::UiWaypoint(Backlight* backlight) : UiBase(), backlight_(backlight) {
 
   distance_label_ = lv_label_create(content_);
 
-  static lv_color_t
-      cbuf[LV_CANVAS_BUF_SIZE_TRUE_COLOR(CANVAS_WIDTH, CANVAS_HEIGHT)];
-
-  canvas_ = lv_canvas_create(content_);
-  lv_canvas_set_buffer(canvas_, cbuf, CANVAS_WIDTH, CANVAS_HEIGHT,
+  arrow_canvas_ = lv_canvas_create(content_);
+  lv_canvas_set_buffer(arrow_canvas_, cbuf, kCanvasWidth, kCanvasHeight,
                        LV_IMG_CF_TRUE_COLOR);
 
   static lv_style_t style;
@@ -133,19 +134,12 @@ UiWaypoint::UiWaypoint(Backlight* backlight) : UiBase(), backlight_(backlight) {
 }
 
 void UiWaypoint::Update(GpsInfo gps_info) {
-  char title_text[15];
   if (mode_ == Mode::kWaypoints) {
     backlight_->SetColor(255, 0, 0, 0);
-    if (current_waypoint_index_ == 0) {
-      snprintf(title_text, 15, "WAYPOINT CAMP");
-    } else {
-      snprintf(title_text, 15, "WAYPOINT %d", current_waypoint_index_);
-    }
+    SetTitle(waypoint_names_[current_waypoint_index_]);
   } else {
-    backlight_->SetColor(255, 0, 0, 100);
-    snprintf(title_text, 15, "BATHROOM");
+    SetTitle("BATHROOM");
   }
-  SetTitle(title_text);
 
   gps_info_ = gps_info;
 
@@ -164,24 +158,24 @@ void UiWaypoint::Update(GpsInfo gps_info) {
       return;
     }
   } else {
-    waypoint = MakeValid<LatLon>(
-        FindNearestBathroom({.lat = gps_info.lat, .lon = gps_info.lon}));
+    waypoint = MakeValid<LatLon>(FindNearestBathroom(gps_info.location));
   }
 
   // Display distance.
   char distance_text[20];
-  const double distance_ft = metersToFeet(distanceBetween(
-      waypoint.value, {.lat = gps_info.lat, .lon = gps_info.lon}));
+  const double distance_ft =
+      metersToFeet(distanceBetween(waypoint.value, gps_info.location));
   if (distance_ft <= 9999.0) {
-    snprintf(distance_text, 20, "%d\nft", (int)distance_ft);
+    snprintf(distance_text, sizeof(distance_text), "%d\nft",
+             static_cast<int>(distance_ft));
   } else {
-    snprintf(distance_text, 20, "%.1f\nmi", feetToMiles(distance_ft));
+    snprintf(distance_text, sizeof(distance_text), "%.1f\nmi",
+             feetToMiles(distance_ft));
   }
   lv_label_set_text(distance_label_, distance_text);
 
   // Compute course required to get to waypoint.
-  const double course_to_waypoint =
-      courseTo(waypoint.value, {.lat = gps_info.lat, .lon = gps_info.lon});
+  const double course_to_waypoint = courseTo(waypoint.value, gps_info.location);
   double course_diff = course_to_waypoint - gps_info.course_deg;
   if (course_diff > 360.0)
     course_diff -= 360.0;
@@ -190,7 +184,7 @@ void UiWaypoint::Update(GpsInfo gps_info) {
 
   if (distance_ft < 40.0 || gps_info_.speed_mph < 2.0) {
     // Direction information is not very stable if waypoint is very close or if
-    // speed is low.
+    // speed is low. Just show a circle instead of a direction arrow.
     draw_circle();
   } else {
     draw_arrow(course_diff);
@@ -207,6 +201,5 @@ void UiWaypoint::IncrementWaypoint() {
 void UiWaypoint::SaveWaypoint() {
   if (mode_ != Mode::kWaypoints) return;
   if (!gps_info_.valid) return;
-  ws_.Write(current_waypoint_index_,
-            {.lat = gps_info_.lat, .lon = gps_info_.lon});
+  ws_.Write(current_waypoint_index_, gps_info_.location);
 }

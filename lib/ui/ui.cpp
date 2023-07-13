@@ -6,18 +6,25 @@
 #include "lvgl.h"
 #include "ui_location.h"
 #include "ui_waypoint.h"
+#include "power.h"
+#include "hal_time.h"
 
-Ui::Ui(Backlight* backlight) {
+#include <iostream>
+
+Ui::Ui(Backlight* backlight, Power* power) : power_(power) {
   ui_location_ = std::make_unique<UiLocation>();
   ui_waypoint_ = std::make_unique<UiWaypoint>(backlight);
-  ui_diagnostics_ = std::make_unique<UiDiagnostics>();
+  ui_diagnostics_ = std::make_unique<UiDiagnostics>(power_);
   SetMode(kLocation);
 }
 
 void Ui::update(uint32_t millis) {
-  Serial.println("Mode = " + String((int)mode_));
+  uint32_t shutdown_time = auto_shutdown_.update(last_button_press_ms_, gps_info_);
+  if (shutdown_time - time_millis() <= (1000 * 10)) {
+  }
+
   switch (mode_) {
-    case Mode::kLocation:
+    case Mode::kLocation: 
       ui_location_->update(gps_info_);
       break;
     case Mode::kWaypoint:
@@ -33,9 +40,14 @@ void Ui::update(uint32_t millis) {
 }
 
 void Ui::ButtonPress(Ui::Button button) {
+  last_button_press_ms_ = time_millis();
   switch (button) {
     case Button::kA:
-      SetMode(Mode::kLocation);
+      if (mode_ == Mode::kDiagnostics) {
+        ui_diagnostics_->GoToNextPage();
+      } else {
+        SetMode(Mode::kLocation);
+      }
       break;
     case Button::kB:
       // If already in the waypoint mode, go to next waypoint.
@@ -56,13 +68,22 @@ void Ui::ButtonPress(Ui::Button button) {
 }
 
 void Ui::ButtonLongPress(Ui::Button button) {
+  last_button_press_ms_ = time_millis();
   switch (button) {
     case Button::kA:
-      SetMode(Mode::kDiagnostics);
+      if (mode_ == Mode::kLocation) {
+        SetMode(Mode::kDiagnostics);
+      } else {
+        SetMode(Mode::kLocation);
+      }
       break;
     case Button::kB:
       ui_waypoint_->SaveWaypoint();
       break;
+    // case Button::kE:
+    //   // Turn off the power to the battery.
+    //   power_->power_enable(false);
+    //   break;
     default:
       break;
   }

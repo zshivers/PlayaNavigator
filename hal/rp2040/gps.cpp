@@ -17,7 +17,7 @@ uint8_t HourAdjustWithTimezone(uint8_t utc_hour) {
 }
 }  // namespace
 
-Gps::Gps() : uart_(4, 5) { uart_.begin(115200); }
+Gps::Gps() : uart_(/*tx=*/0, /*rx=*/1) { uart_.begin(9600); }
 
 void Gps::update() {
   while (uart_.available() > 0) {
@@ -31,8 +31,8 @@ void Gps::update() {
 
   gps_info_.valid = true;
   gps_info_.update_time = millis();
-  gps_info_.lat = tiny_gps_.location.lat();
-  gps_info_.lon = tiny_gps_.location.lng();
+  gps_info_.location.lat = tiny_gps_.location.lat();
+  gps_info_.location.lon = tiny_gps_.location.lng();
 
   if (tiny_gps_.time.isValid()) {
     auto& t = tiny_gps_.time;

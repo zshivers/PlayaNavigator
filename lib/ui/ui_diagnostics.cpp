@@ -4,14 +4,17 @@
 
 #include "coordinates.h"
 #include "lvgl.h"
+#include "power.h"
 
 namespace {
 constexpr uint32_t kGpsStaleTimeout_ms = 2'500;
 
 const char* GpsStatusString(uint32_t millis, const GpsInfo& gps_info) {
   if (millis - gps_info.update_time > kGpsStaleTimeout_ms) {
-    return "Disconnect";
+    return "Disconnect";  // Cannot fit "Disconnected".
   }
+  // Mapping from HDOP to quality string is from
+  // https://en.wikipedia.org/wiki/Dilution_of_precision_(navigation)
   if (gps_info.hdop <= 2) {
     return "Excellent";
   } else if (gps_info.hdop <= 5) {
@@ -26,14 +29,15 @@ const char* GpsStatusString(uint32_t millis, const GpsInfo& gps_info) {
 }
 }  // namespace
 
-UiDiagnostics::UiDiagnostics() : UiBase() {
+UiDiagnostics::UiDiagnostics(Power* power) : UiBase() {
+  power_ = power;
   SetTitle("DIAGNOSTICS");
 
-  static lv_style_t style;
-  lv_style_init(&style);
-  lv_style_set_radius(&style, 0);
-  lv_style_set_border_color(&style, lv_color_black());
-  lv_style_set_text_font(&style, &lv_font_unscii_8);
+  static lv_style_t text_style;
+  lv_style_init(&text_style);
+  lv_style_set_radius(&text_style, 0);
+  lv_style_set_border_color(&text_style, lv_color_black());
+  lv_style_set_text_font(&text_style, &lv_font_unscii_8);
 
   static lv_style_t container_style;
   lv_style_init(&container_style);
@@ -48,18 +52,33 @@ UiDiagnostics::UiDiagnostics() : UiBase() {
   lv_obj_add_style(content_, &container_style, 0);
 
   diagnostics_text_ = lv_label_create(content_);
-  lv_obj_add_style(diagnostics_text_, &style, 0);
+  lv_obj_add_style(diagnostics_text_, &text_style, 0);
 }
 
 void UiDiagnostics::update(uint32_t millis, GpsInfo gps_info) {
-  const char fmt[] = R"( GPS:%s
+  char text[100] = "";
+  switch (page_) {
+    case kGps: {
+      constexpr char format[] = R"( GPS:%s
 Time:%02d:%02d:%02d
  Lat:%.6f
  Lon:%.6f
-Sats:%d)";
-  char s[100] = "";
-  snprintf(s, 100, fmt, GpsStatusString(millis, gps_info), gps_info.hour,
-           gps_info.minute, gps_info.second, gps_info.lat, gps_info.lon,
-           gps_info.satellites);
-  lv_label_set_text(diagnostics_text_, s);
+Sats:%-2d PPS:%d)";
+      snprintf(text, sizeof(text), format, GpsStatusString(millis, gps_info),
+               gps_info.hour, gps_info.minute, gps_info.second,
+               gps_info.location.lat, gps_info.location.lon,
+               static_cast<int>(gps_info.satellites), power_->gps_pps());
+      break;
+    }
+
+    case kBattery: {
+      constexpr char format[] = R"(Voltage:%.2f V
+ Charge:%d
+    USB:%d)";
+      snprintf(text, sizeof(text), format, power_->battery_voltage(),
+               power_->battery_charging(), power_->usb_plugged());
+      break;
+    }
+  }
+  lv_label_set_text(diagnostics_text_, text);
 }

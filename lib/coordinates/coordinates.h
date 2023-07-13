@@ -16,23 +16,22 @@ constexpr double feetToMeters(const double feet) { return feet / 3.281; }
 constexpr double feetToMiles(const double feet) { return feet / 5280.0; }
 constexpr double metersToMiles(const double feet) { return feet / 1609.34; }
 
-struct GpsInfo {
-  uint32_t update_time = 0;
-  bool valid = false;
-  uint32_t satellites = 0;
-  double lat = 0.0;
-  double lon = 0.0;
-  double course_deg = 0.0;
-  double speed_mph = 0.0;
-  double hdop = 0.0;
-  uint8_t hour = 0, minute = 0, second = 0;
-};
-
 // Latitude and Longitude in decimal format.
 // +Lat = N, -Lat = S
 // +Lon = E, -Lon = W
 struct LatLon {
   double lat, lon;
+};
+
+struct GpsInfo {
+  uint32_t update_time = 0;
+  bool valid = false;
+  uint32_t satellites = 0;
+  LatLon location;
+  double course_deg = 0.0;
+  double speed_mph = 0.0;
+  double hdop = 0.0;
+  uint8_t hour = 0, minute = 0, second = 0;
 };
 
 // Important features that define the geometry of the map.
@@ -64,11 +63,6 @@ struct PlayaAddress {
   uint8_t minute;
   double radius_m;
   MaybeValid<char> road;
-
-  // friend bool operator==(const PlayaAddress& lhs, const PlayaAddress& rhs) {
-  //   return lhs.hour == rhs.hour && lhs.minute == rhs.minute &&
-  //          lhs.road == rhs.road;
-  // }
 };
 
 PlayaCoords LatLonToPlayaCoords(const PlayaMapConfig& pmc, const LatLon& in);
@@ -79,8 +73,11 @@ PlayaCoords LatLonToPlayaCoords(const PlayaMapConfig& pmc, const LatLon& in);
 // o'clock.
 bool IsAddressable(const PlayaMapConfig& pmc, const PlayaCoords& pc);
 
-MaybeValid<PlayaAddress> LatLonToAddress(const PlayaMapConfig& pmc,
+PlayaAddress LatLonToAddress(const PlayaMapConfig& pmc,
                                          const LatLon& ll);
 
-double distanceBetween(LatLon point1, LatLon point2);
-double courseTo(LatLon point1, LatLon point2);
+// Return the approximate distance in meters between two locations.
+double distanceBetween(const LatLon& point1, const LatLon& point2);
+
+// Return the course in degrees from point1 to point2.
+double courseTo(const LatLon& point1, const LatLon& point2);
