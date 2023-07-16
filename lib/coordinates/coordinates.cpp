@@ -1,19 +1,21 @@
 #include "coordinates.h"
 
 #include <cmath>
+#include <iostream>
 
 #include "maybe_valid.h"
 
 namespace {
 inline double square(double in) { return in * in; }
 
-int RoundUpToNearestMultiple(int in, int multiple) {
-  if (multiple == 0) return in;
+constexpr double kRoadBoundaryPadding_m = feetToMeters(50);
 
-  int remainder = in % multiple;
-  if (remainder == 0) return in;
+double CityInnerRadialBoundary(const PlayaMapConfig& pmc) {
+  return pmc.roads.front().radius_m - kRoadBoundaryPadding_m;
+}
 
-  return in + multiple - remainder;
+double CityOuterRadialBoundary(const PlayaMapConfig& pmc) {
+  return pmc.roads.back().radius_m + kRoadBoundaryPadding_m;
 }
 }  // namespace
 
@@ -61,6 +63,31 @@ double courseTo(const LatLon& point1, const LatLon& point2) {
   return radToDeg(atan2(y, x));
 }
 
+bool PlayaMapConfigValid(const PlayaMapConfig& pmc) {
+  // Center point is a valid lat/lon.
+  if (pmc.center.lat < -90.0 || pmc.center.lat > 90.0 ||
+      pmc.center.lon < -180.0 || pmc.center.lon > 180.0) {
+    return false;
+  }
+
+  // Check the roads.
+  double last_radius_m = -1.0;
+  for (const auto road : pmc.roads) {
+    // All radii must be positive.
+    if (road.radius_m < 0) return false;
+    // Radii in list must be monotonically increasing.
+    if (road.radius_m < last_radius_m) return false;
+    last_radius_m = road.radius_m;
+    // Need a letter for the road label.
+    if (!isalpha(road.road)) return false;
+  }
+
+  // Rotation degrees must be in [-360, 360].
+  if (pmc.rotation_deg < -360.0 || pmc.rotation_deg > 360.0) return false;
+  
+  return true;
+}
+
 PlayaCoords LatLonToPlayaCoords(const PlayaMapConfig& pmc, const LatLon& in) {
   PlayaCoords out;
   out.radius_m = distanceBetween(pmc.center, in);
@@ -71,23 +98,29 @@ PlayaCoords LatLonToPlayaCoords(const PlayaMapConfig& pmc, const LatLon& in) {
 bool IsAddressable(const PlayaMapConfig& pmc, const PlayaCoords& pc) {
   constexpr double kTenOClock_deg = (360.0 / 12) * -2.0;
   constexpr double kTwoOClock_deg = (360.0 / 12) * 2.0;
-  return pc.radius_m >= pmc.esplanade_radius_m &&
-         pc.radius_m <= pmc.last_road_radius_m &&
+  return pc.radius_m >= CityInnerRadialBoundary(pmc) &&
+         pc.radius_m <= CityOuterRadialBoundary(pmc) &&
          !(pc.angle_deg > kTenOClock_deg && pc.angle_deg < kTwoOClock_deg);
 }
 
-PlayaAddress LatLonToAddress(const PlayaMapConfig& pmc,
-                                         const LatLon& ll) {
+PlayaAddress LatLonToAddress(const PlayaMapConfig& pmc, const LatLon& ll) {
   const PlayaCoords pc = LatLonToPlayaCoords(pmc, ll);
 
   PlayaAddress address;
-  double clock_decimal = pc.angle_deg / 360.0 * 12.0;
-  if (clock_decimal < 0.0) clock_decimal += 12.0;
-  address.hour = static_cast<uint8_t>(clock_decimal);
+  double clock_hours = pc.angle_deg / 360.0 * 12.0;
+  if (clock_hours < 0.0) clock_hours += 12.0;
+
+  // Round to nearest 5 minutes.
+  constexpr double kRoundingDuration_hours = 5.0 / 60.0;
+  clock_hours = std::round(clock_hours / kRoundingDuration_hours) *
+                kRoundingDuration_hours;
+
+  // Split into hours and minutes.
+  double clock_integral;
+  const double clock_fractional = std::modf(clock_hours, &clock_integral);
+  address.hour = static_cast<uint8_t>(clock_integral);
   if (address.hour == 0) address.hour = 12;
-  address.minute = static_cast<uint8_t>((clock_decimal - address.hour) * 60);
-  address.minute =
-      RoundUpToNearestMultiple(address.minute, 5);  // Round to nearest 5 mins.
+  address.minute = static_cast<uint8_t>(clock_fractional * 60);
   if (address.minute == 60) address.minute = 0;
 
   address.radius_m = pc.radius_m;
@@ -97,13 +130,12 @@ PlayaAddress LatLonToAddress(const PlayaMapConfig& pmc,
     return address;
   }
 
-  constexpr double kBoundaryPadding_m = 50;
-  for (int i = 0; i < pmc.roads.size(); ++i) {
-    double r_before = i == 0 ? pmc.roads[0].radius_m - kBoundaryPadding_m
-                             : pmc.roads[i].radius_m;
-    double r_after = i < (pmc.roads.size() - 1)
-                         ? r_after = pmc.roads[i + 1].radius_m
-                         : r_after = r_before + kBoundaryPadding_m;
+  // Find the nearest road.
+  for (size_t i = 0; i < pmc.roads.size(); ++i) {
+    double r_before =
+        i == 0 ? CityInnerRadialBoundary(pmc) : pmc.roads[i].radius_m;
+    double r_after = i < (pmc.roads.size() - 1) ? pmc.roads[i + 1].radius_m
+                                                : CityOuterRadialBoundary(pmc);
     const double r_mid = (r_before + r_after) / 2.0;
     if (pc.radius_m < r_mid) {
       address.road = MakeValid<char>(pmc.roads[i].road);

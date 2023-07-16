@@ -5,7 +5,7 @@
 #include "pico/time.h"
 
 constexpr int kVSysAdcInputPin = 29;
-constexpr int kPowerEnablePin = 22;
+constexpr int kPowerEnablePin = 10;
 constexpr int kGpsEnablePin = 11;
 constexpr int kGpsPpsPin = 16;
 constexpr int kChargingPin = 3;
@@ -40,36 +40,19 @@ void Power::Start() {
 }
 
 void Power::power_enable(bool on) {
-  gpio_put(kPowerEnablePin, !on);  // Low = power on, High = power off.
-  if (!on) {
-    // sleep_ms(50);
-    // gpio_set_dir(kPowerEnablePin, GPIO_IN);
-    // gpio_set_pulls(kPowerEnablePin, true, true);
-    sleep_ms(500);
-  }
-  // if (on) {
-  //   gpio_set_dir(kPowerEnablePin, GPIO_OUT);
-  //   gpio_put(kPowerEnablePin, 0);
-  // } else {
-  //   gpio_set_dir(kPowerEnablePin, GPIO_IN);
-  // }
+  gpio_put(kPowerEnablePin, on);
+  if (!on) sleep_ms(2000);
 }
 
 void Power::gps_enable(bool on) {
   gpio_put(kGpsEnablePin, !on);  // Low = power on, High = power off.
 }
 
-bool Power::gps_pps() const {
-  gpio_get(kGpsPpsPin);
-}
+bool Power::gps_pps() const { gpio_get(kGpsPpsPin); }
 
-bool Power::usb_plugged() const {
-  return gpio_get(kUsbPluggedPin);
-}
+bool Power::usb_plugged() const { return gpio_get(kUsbPluggedPin); }
 
-bool Power::battery_charging() const {
-  return !gpio_get(kChargingPin);
-}
+bool Power::battery_charging() const { return !gpio_get(kChargingPin); }
 
 float Power::battery_voltage() const {
   // The Pico board uses GPIO29 with a voltage divider to sample VSYS.

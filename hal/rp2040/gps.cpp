@@ -19,13 +19,12 @@ uint8_t HourAdjustWithTimezone(uint8_t utc_hour) {
 
 Gps::Gps() : uart_(/*tx=*/0, /*rx=*/1) { uart_.begin(9600); }
 
-void Gps::update() {
+void Gps::Update() {
   while (uart_.available() > 0) {
     tiny_gps_.encode(uart_.read());
   }
 
   if (!tiny_gps_.location.isValid()) {
-    gps_info_ = {};
     return;
   }
 

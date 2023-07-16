@@ -8,9 +8,6 @@ constexpr PlayaMapConfig kPlayaMapConfig = {
     // True north/south line is along 4:30 = (360 deg / 12 h) * (6 - 4.5) = 45
     // deg
     .rotation_deg = -45.0,
-    .esplanade_radius_m = feetToMeters(2500.0),
-    .last_road_radius_m = feetToMeters(11690.0 / 2.0),  // 5845
-    .trash_fence_radius_m = feetToMeters(8491.0),
     .roads = {{
         {'S', feetToMeters(2500)},
         {'A', feetToMeters(2940)},
@@ -40,9 +37,6 @@ constexpr std::array<LatLon, 5> kBathroomLocations = {{
 constexpr PlayaMapConfig kPlayaMapConfig = {
     .center = {.lat = 37.776183400365476, .lon = -122.41379170684557},
     .rotation_deg = -45.0,
-    .esplanade_radius_m = 71.0,
-    .last_road_radius_m = 1000.0,
-    .trash_fence_radius_m = 1850.0,
     .roads = {{
         {'S', 71.0},  // Natoma
         {'A', 137.0}, // Howard

@@ -46,12 +46,9 @@ TEST(LatLonToPlayaCoords, TranslationAndRotation) {
 // https://bm-innovate.s3.amazonaws.com/2022/2022_BRC_Measurements.pdf
 constexpr PlayaMapConfig kPlayaMapConfig = {
     .center = {.lat = 40.787030, .lon = -119.202740},
-    // True north/south line is along 4:30 = (360 deg / 12 h) * (6 - 4.5) = 45
-    // deg
+    // True north/south line is along 4:30
+    // (360 deg / 12 h) * (6 - 4.5) = 45 deg
     .rotation_deg = -45.0,
-    .esplanade_radius_m = feetToMeters(2500.0),
-    .last_road_radius_m = feetToMeters(11690.0 / 2.0),  // 5845
-    .trash_fence_radius_m = feetToMeters(8491.0),
     .roads = {{
         {'S', feetToMeters(2500)},
         {'A', feetToMeters(2940)},
@@ -67,6 +64,31 @@ constexpr PlayaMapConfig kPlayaMapConfig = {
         {'K', feetToMeters(5840)},
     }},
 };
+
+TEST(PlayaMapConfigValid, ConfigInvalidIfRoadsAreNotMonoticallyIncreasing) {
+  constexpr PlayaMapConfig kTestConfig = {
+      .center = {.lat = 0.0, .lon = 0.0},
+      .trash_fence_radius_m = feetToMeters(2000.0),
+      .roads = {{
+          {'S', feetToMeters(100)},
+          {'A', feetToMeters(200)},
+          {'B', feetToMeters(300)},
+          {'C', feetToMeters(400)},
+          {'D', feetToMeters(500)},
+          {'E', feetToMeters(700)},
+          {'F', feetToMeters(600)},
+          {'G', feetToMeters(800)},
+          {'H', feetToMeters(900)},
+          {'I', feetToMeters(1000)},
+          {'J', feetToMeters(1100)},
+          {'K', feetToMeters(1200)},
+      }}};
+  EXPECT_FALSE(PlayaMapConfigValid(kTestConfig));
+}
+
+TEST(PlayaMapConfigValid, TestConfigValid) {
+  EXPECT_TRUE(PlayaMapConfigValid(kPlayaMapConfig));
+}
 
 TEST(LatLonToPlayaCoords, BurningMan2022Map_P3) {
   PlayaCoords pc = LatLonToPlayaCoords(kPlayaMapConfig,
@@ -100,7 +122,7 @@ TEST(IsAddressable, CloseToTheMan) {
 
 TEST(IsAddressable, InnerPlaya) {
   EXPECT_FALSE(IsAddressable(
-      kPlayaMapConfig, {.radius_m = feetToMeters(2499.0), .angle_deg = -90.0}));
+      kPlayaMapConfig, {.radius_m = feetToMeters(2400.0), .angle_deg = -90.0}));
 }
 
 TEST(IsAddressable, Between10and2) {
@@ -137,8 +159,7 @@ TEST(IsAddressable, DeepPlaya) {
 }
 
 bool AddressEqual(const PlayaAddress& address1, const PlayaAddress& address2) {
-  return address1.hour == address2.hour &&
-         address1.minute == address2.minute &&
+  return address1.hour == address2.hour && address1.minute == address2.minute &&
          address1.road.valid == address2.road.valid &&
          address1.road.value == address2.road.value;
 }
@@ -172,11 +193,12 @@ TEST(PlayaCoordsToAddress, Jand6) {
   PlayaAddress expected = {
       .hour = 6, .minute = 0, .road = MakeValid<char>('J')};
   EXPECT_TRUE(AddressEqual(address, expected));
+  PrintTo(address, &std::cout);
 }
 
 TEST(PlayaCoordsToAddress, Fand815) {
   PlayaAddress address =
-      LatLonToAddress(kPlayaMapConfig, {.lat = 40.791843, .lon =-119.218033});
+      LatLonToAddress(kPlayaMapConfig, {.lat = 40.791843, .lon = -119.218033});
   PlayaAddress expected = {
       .hour = 8, .minute = 15, .road = MakeValid<char>('F')};
   EXPECT_TRUE(AddressEqual(address, expected));

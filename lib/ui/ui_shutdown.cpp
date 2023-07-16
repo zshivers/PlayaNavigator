@@ -35,11 +35,7 @@ UiShutdown::UiShutdown() : UiBase() {
 }
 
 void UiShutdown::update(uint32_t millis) {
-//   constexpr char format[] = R"( GPS:%s
-// Time:%02d:%02d:%02d
-//  Lat:%.6f
-//  Lon:%.6f
-// Sats:%d)";
+//   constexpr char format[] = R"()";
 //   char text[100] = "";
 //   snprintf(text, sizeof(text), format, GpsStatusString(millis, gps_info),
 //            gps_info.hour, gps_info.minute, gps_info.second,

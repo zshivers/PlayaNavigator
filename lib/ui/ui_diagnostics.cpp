@@ -29,8 +29,7 @@ const char* GpsStatusString(uint32_t millis, const GpsInfo& gps_info) {
 }
 }  // namespace
 
-UiDiagnostics::UiDiagnostics(Power* power) : UiBase() {
-  power_ = power;
+UiDiagnostics::UiDiagnostics(Power& power) : UiBase(), power_(power) {
   SetTitle("DIAGNOSTICS");
 
   static lv_style_t text_style;
@@ -67,7 +66,7 @@ Sats:%-2d PPS:%d)";
       snprintf(text, sizeof(text), format, GpsStatusString(millis, gps_info),
                gps_info.hour, gps_info.minute, gps_info.second,
                gps_info.location.lat, gps_info.location.lon,
-               static_cast<int>(gps_info.satellites), power_->gps_pps());
+               static_cast<int>(gps_info.satellites), power_.gps_pps());
       break;
     }
 
@@ -75,8 +74,8 @@ Sats:%-2d PPS:%d)";
       constexpr char format[] = R"(Voltage:%.2f V
  Charge:%d
     USB:%d)";
-      snprintf(text, sizeof(text), format, power_->battery_voltage(),
-               power_->battery_charging(), power_->usb_plugged());
+      snprintf(text, sizeof(text), format, power_.battery_voltage(),
+               power_.battery_charging(), power_.usb_plugged());
       break;
     }
   }

@@ -9,7 +9,7 @@
 class Gps {
  public:
   Gps();
-  void update() {}
+  void Update() {}
   GpsInfo gps_info();
 
  private:

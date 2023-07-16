@@ -38,14 +38,11 @@ struct GpsInfo {
 struct PlayaMapConfig {
   LatLon center;                // Central point all of BM is laid out around.
   double rotation_deg;          // Rotation from North to 12:00.
-  double esplanade_radius_m;    // Most inner road.
-  double last_road_radius_m;    // Most outer road.
-  double trash_fence_radius_m;  // Radius of circle circumscribing trash fench
-                                // pentagon.
   struct RoadConfig {
     char road;        // Single letter for road.
     double radius_m;  // Radius from the center.
   };
+  // Raods must be ordered in distance from man, from closest to furthest.
   std::array<RoadConfig, 12> roads;
 };
 
@@ -64,6 +61,9 @@ struct PlayaAddress {
   double radius_m;
   MaybeValid<char> road;
 };
+
+// Returns true if the map configuration is valid.
+bool PlayaMapConfigValid(const PlayaMapConfig& pmc);
 
 PlayaCoords LatLonToPlayaCoords(const PlayaMapConfig& pmc, const LatLon& in);
 
