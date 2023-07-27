@@ -1,7 +1,7 @@
 #include "OneButton.h"
 #include "app_hal.h"
 #include "backlight.h"
-#include "button.h"
+#include "board.h"
 #include "gps.h"
 #include "hal_time.h"
 #include "lvgl.h"
@@ -16,14 +16,14 @@
 #endif
 
 Ui* ui;
-Gps* gps;
+Gps gps;
 Power power;
 Backlight* backlight;
-OneButton button_a(12);
-OneButton button_b(13);
-OneButton button_c(14);
-OneButton button_d(15);
-OneButton button_e(22);
+OneButton button_a(kButtonAPin);
+OneButton button_b(kButtonBPin);
+OneButton button_c(kButtonCPin);
+OneButton button_d(kButtonDPin);
+OneButton button_e(kButtonEPin);
 
 #ifdef PLATFORM_ARDUINO
 #include <Arduino.h>
@@ -59,10 +59,12 @@ void setup() {
 
   hal_setup();
 
-  backlight = new Backlight(9, 6, 7, 8);
+  backlight = new Backlight(kBacklightWhitePin, kBacklightRedPin,
+                            kBacklightGreenPin, kBacklightBluePin);
   backlight->SetColor(255, 0, 0, 0);
   ui = new Ui(power, backlight);
-  gps = new Gps();
+
+  gps.Start();
 
   button_a.attachClick(button_a_press_cb);
   button_b.attachClick(button_b_press_cb);
@@ -87,10 +89,10 @@ void loop() {
   button_e.tick();
 
   const uint32_t ms = time_millis();
-  gps->Update();
+  gps.Update(ms);
 
   // const absolute_time_t start = get_absolute_time();
-  ui->OnGpsInfo(gps->gps_info());
+  ui->OnGpsInfo(gps.gps_info());
   ui->update(ms);
   // const absolute_time_t end = get_absolute_time();
 

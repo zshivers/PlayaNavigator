@@ -24,10 +24,11 @@ struct LatLon {
 };
 
 struct GpsInfo {
+  uint32_t uart_time = 0;
   uint32_t update_time = 0;
   bool valid = false;
   uint32_t satellites = 0;
-  LatLon location;
+  LatLon location = {0.0, 0.0};
   double course_deg = 0.0;
   double speed_mph = 0.0;
   double hdop = 0.0;

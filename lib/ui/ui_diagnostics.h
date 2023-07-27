@@ -21,4 +21,8 @@ class UiDiagnostics : public UiBase {
   Power& power_;
   enum Page { kGps, kBattery } page_ = kGps;
   lv_obj_t* diagnostics_text_;
+  bool last_pps_state_ = false;
+  uint8_t pps_count_ = 0;
+  uint32_t last_uart_time_ = 0;
+  uint8_t uart_message_count_ = 0;
 };

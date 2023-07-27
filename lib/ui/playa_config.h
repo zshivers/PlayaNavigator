@@ -58,3 +58,34 @@ constexpr std::array<LatLon, 3> kBathroomLocations = {{
     {37.775291235690105, -122.41572152148551},  // 10th & Mission
     {37.77483219054346, -122.41139189301217}, // Middle of clementina
 }};
+
+#if 0
+constexpr PlayaMapConfig kPlayaMapConfig = {
+    .center = {.lat = 40.786400, .lon = -119.203500},
+    // True north/south line is along 4:30 = (360 deg / 12 h) * (6 - 4.5) = 45
+    // deg
+    .rotation_deg = -45.0,
+    .roads = {{
+        {'S', feetToMeters(2500)},
+        {'A', feetToMeters(2940)},
+        {'B', feetToMeters(3230)},
+        {'C', feetToMeters(3520)},
+        {'D', feetToMeters(3810)},
+        {'E', feetToMeters(4100)},
+        {'F', feetToMeters(4590)},
+        {'G', feetToMeters(4880)},
+        {'H', feetToMeters(5170)},
+        {'I', feetToMeters(5460)},
+        {'J', feetToMeters(5650)},
+        {'K', feetToMeters(5845)},
+    }},
+};
+
+constexpr std::array<LatLon, 5> kBathroomLocations = {{
+    {40.787030, -119.202740},
+    {40.787030, -119.202740},
+    {40.787030, -119.202740},
+    {40.787030, -119.202740},
+    {40.787030, -119.202740},
+}};
+#endif

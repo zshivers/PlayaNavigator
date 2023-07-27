@@ -1,5 +1,6 @@
 #include "ui_diagnostics.h"
 
+#include <Arduino.h>
 #include <stdio.h>
 
 #include "coordinates.h"
@@ -10,8 +11,11 @@ namespace {
 constexpr uint32_t kGpsStaleTimeout_ms = 2'500;
 
 const char* GpsStatusString(uint32_t millis, const GpsInfo& gps_info) {
-  if (millis - gps_info.update_time > kGpsStaleTimeout_ms) {
+  if (millis - gps_info.uart_time > kGpsStaleTimeout_ms) {
     return "Disconnect";  // Cannot fit "Disconnected".
+  }
+  if (millis - gps_info.update_time > kGpsStaleTimeout_ms) {
+    return "No Fix";
   }
   // Mapping from HDOP to quality string is from
   // https://en.wikipedia.org/wiki/Dilution_of_precision_(navigation)
@@ -55,18 +59,33 @@ UiDiagnostics::UiDiagnostics(Power& power) : UiBase(), power_(power) {
 }
 
 void UiDiagnostics::update(uint32_t millis, GpsInfo gps_info) {
-  char text[100] = "";
+  // Count PPS edges.
+  const bool pps_state = power_.gps_pps();
+  if (pps_state && !last_pps_state_) {
+    pps_count_++;
+  }
+  last_pps_state_ = pps_state;
+
+  if (gps_info.uart_time != last_uart_time_) {
+    uart_message_count_++;
+  }
+  last_uart_time_ = gps_info.uart_time;
+
+  char text[110] = "";
   switch (page_) {
     case kGps: {
       constexpr char format[] = R"( GPS:%s
 Time:%02d:%02d:%02d
  Lat:%.6f
  Lon:%.6f
-Sats:%-2d PPS:%d)";
+Sats:%-3d PPS:%d
+UART:%-3d PPS:%d)";
       snprintf(text, sizeof(text), format, GpsStatusString(millis, gps_info),
                gps_info.hour, gps_info.minute, gps_info.second,
                gps_info.location.lat, gps_info.location.lon,
-               static_cast<int>(gps_info.satellites), power_.gps_pps());
+               static_cast<int>(gps_info.satellites), pps_state,
+               uart_message_count_, pps_count_);
+      
       break;
     }
 

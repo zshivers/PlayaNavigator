@@ -1,15 +1,9 @@
 #include "power.h"
 
+#include "board.h"
 #include "hardware/adc.h"
 #include "hardware/gpio.h"
 #include "pico/time.h"
-
-constexpr int kVSysAdcInputPin = 29;
-constexpr int kPowerEnablePin = 10;
-constexpr int kGpsEnablePin = 11;
-constexpr int kGpsPpsPin = 16;
-constexpr int kChargingPin = 3;
-constexpr int kUsbPluggedPin = 24;
 
 void Power::Start() {
   // ADC setup.
@@ -34,7 +28,7 @@ void Power::Start() {
   gpio_set_pulls(kChargingPin, true, false);
   gpio_set_dir(kChargingPin, GPIO_IN);
 
-  // USB plugged input.
+  // // USB plugged input.
   gpio_set_function(kUsbPluggedPin, GPIO_FUNC_SIO);
   gpio_set_dir(kUsbPluggedPin, GPIO_IN);
 }
@@ -48,7 +42,7 @@ void Power::gps_enable(bool on) {
   gpio_put(kGpsEnablePin, !on);  // Low = power on, High = power off.
 }
 
-bool Power::gps_pps() const { gpio_get(kGpsPpsPin); }
+bool Power::gps_pps() const { return gpio_get(kGpsPpsPin); }
 
 bool Power::usb_plugged() const { return gpio_get(kUsbPluggedPin); }
 

@@ -1,6 +1,7 @@
 #include <Arduino.h>
 
 #include "Serial.h"
+#include "board.h"
 #include "hardware/clocks.h"
 #include "hardware/gpio.h"
 #include "hardware/pll.h"
@@ -10,8 +11,6 @@
 #include "power.h"
 #include "st7567.hpp"
 
-constexpr int kGpsPpsInputPin = 16;
-
 constexpr int kDisplayWidth = 128;
 constexpr int kDisplayHeight = 64;
 
@@ -19,11 +18,11 @@ ST7567::Options kDisplayOptions = {
     .width = kDisplayWidth,
     .height = kDisplayHeight,
     .spi = spi0,
-    .cs_pin = 17,
-    .sck_pin = 18,
-    .mosi_pin = 19,
-    .dc_pin = 20,
-    .reset_pin = 21,
+    .cs_pin = kDisplayCsPin,
+    .sck_pin = kDisplaySckPin,
+    .mosi_pin = kDisplayMosiPin,
+    .dc_pin = kDisplayDcPin,
+    .reset_pin = kDisplayResetPin,
 };
 
 ST7567 display(kDisplayOptions);
@@ -63,12 +62,12 @@ void clock_setup() {
 }
 
 void hal_setup(void) {
-  clock_setup();
+  // clock_setup();
 
   // Built-in LED off to save power.
-  gpio_set_function(25, GPIO_FUNC_SIO);
-  gpio_set_dir(25, GPIO_OUT);
-  gpio_put(25, false);
+  gpio_set_function(kPicoLedPin, GPIO_FUNC_SIO);
+  gpio_set_dir(kPicoLedPin, GPIO_OUT);
+  gpio_put(kPicoLedPin, false);
 
   Serial.begin(115200);
   Serial.println("Playa Naviator GPS");
@@ -76,7 +75,7 @@ void hal_setup(void) {
   display.init();
 
   // lv_log_register_print_cb(lv_log_cb);
-  
+
   lv_init();
 
   static lv_disp_draw_buf_t disp_buf;

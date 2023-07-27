@@ -1,9 +1,9 @@
 #include "gps.h"
 
-#include <Arduino.h>
 
 #include "TinyGPS++.h"
 #include "coordinates.h"
+#include "board.h"
 
 namespace {
 constexpr int8_t kTimeZoneOffsetFromUtc = -7;  // Pacific time
@@ -17,19 +17,25 @@ uint8_t HourAdjustWithTimezone(uint8_t utc_hour) {
 }
 }  // namespace
 
-Gps::Gps() : uart_(/*tx=*/0, /*rx=*/1) { uart_.begin(9600); }
+void Gps::Start() { uart_.begin(9600); }
 
-void Gps::Update() {
+void Gps::Update(uint32_t millis) {
+  int bytes_rx = 0;
   while (uart_.available() > 0) {
-    tiny_gps_.encode(uart_.read());
+    char r = uart_.read();
+    tiny_gps_.encode(r);
+    // Serial.print(r);
+    bytes_rx++;
   }
+  if (bytes_rx > 0) gps_info_.uart_time = millis;
+
 
   if (!tiny_gps_.location.isValid()) {
     return;
   }
 
   gps_info_.valid = true;
-  gps_info_.update_time = millis();
+  gps_info_.update_time = millis;
   gps_info_.location.lat = tiny_gps_.location.lat();
   gps_info_.location.lon = tiny_gps_.location.lng();
 
