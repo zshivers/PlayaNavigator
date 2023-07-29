@@ -135,7 +135,7 @@ UiWaypoint::UiWaypoint(Backlight* backlight) : UiBase(), backlight_(backlight) {
 
 void UiWaypoint::Update(GpsInfo gps_info) {
   if (mode_ == Mode::kWaypoints) {
-    backlight_->SetColor(255, 0, 0, 0);
+    backlight_->SetColor(1.0, 0, 0, 0);
     SetTitle(waypoint_names_[current_waypoint_index_]);
   } else {
     SetTitle("BATHROOM");

@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 
+#include "auto_shutdown.h"
 #include "coordinates.h"
 #include "lvgl.h"
 
@@ -30,17 +31,20 @@ UiShutdown::UiShutdown() : UiBase() {
   lv_style_set_pad_column(&container_style, 0);
   lv_obj_add_style(content_, &container_style, 0);
 
-  diagnostics_text_ = lv_label_create(content_);
-  lv_obj_add_style(diagnostics_text_, &text_style, 0);
+  text_ = lv_label_create(content_);
+  lv_obj_add_style(text_, &text_style, 0);
 }
 
-void UiShutdown::update(uint32_t millis) {
-//   constexpr char format[] = R"()";
-//   char text[100] = "";
-//   snprintf(text, sizeof(text), format, GpsStatusString(millis, gps_info),
-//            gps_info.hour, gps_info.minute, gps_info.second,
-//            gps_info.location.lat, gps_info.location.lon,
-//            static_cast<int>(gps_info.satellites));
-//   lv_label_set_text(diagnostics_text_, text);
-  lv_label_set_text(diagnostics_text_, "Shutdown in 5 secs");
+void UiShutdown::update(uint32_t millis, AutoShutdown::ShutdownReason shutdown_reason) {
+  switch (shutdown_reason) {
+    case AutoShutdown::ShutdownReason::kBatteryLow:
+      lv_label_set_text(text_, "Battery low\nShutting down");
+      break;
+    case AutoShutdown::ShutdownReason::kInactivity:
+      lv_label_set_text(text_, "No activity\nShutting down");
+      break;
+    case AutoShutdown::ShutdownReason::kNoShutdown:
+      lv_label_set_text(text_, "No shutdown imminent");
+      break;
+  }
 }

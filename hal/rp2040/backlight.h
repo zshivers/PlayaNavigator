@@ -5,8 +5,12 @@
 class Backlight {
  public:
   Backlight(int led_white_pin, int led_r_pin, int led_g_pin, int led_b_pin);
-  void SetBrightness(uint8_t brightness);
-  void SetColor(uint8_t w, uint8_t r, uint8_t g, uint8_t b);
+  
+  // Brightness in range [0.0, 1.0].
+  void SetBrightness(float brightness);
+
+  // Colors in range [0.0, 1.0].
+  void SetColor(float w, float r, float g, float b);
 
  private:
   void UpdatePwm();

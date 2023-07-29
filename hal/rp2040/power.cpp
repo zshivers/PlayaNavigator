@@ -17,6 +17,7 @@ void Power::Start() {
   // GPS enable.
   gpio_set_function(kGpsEnablePin, GPIO_FUNC_SIO);
   gpio_set_dir(kGpsEnablePin, GPIO_OUT);
+  gps_enable(false);
 
   // GPS PPS input.
   // TODO put this in a better place.
@@ -56,11 +57,19 @@ float Power::battery_voltage() const {
   constexpr float kDividerResistorUpperKOhm = 200.0f;
   constexpr float kDividerResistorLowerKOhm = 100.0f;
 
+  // There is a diode between the battery input and VSYS. Account for
+  // this roughly constant voltage drop.
+  // Since this is an estimate, bias towards the low side, so that
+  // the battery voltage is underestimated. This causes low battery
+  // checks to be more conservative.
+  constexpr float kInputDiodeDropVoltage = 0.3f;
+
   adc_select_input(3);  // Input 3 = GPIO 29
-  float result = adc_read();
-  float voltage = result * kAdcVrefVoltage / kAdcMax;
-  float battery_voltage =
+  const float result = adc_read();
+  const float voltage = result * kAdcVrefVoltage / kAdcMax;
+  const float battery_voltage =
+      kInputDiodeDropVoltage +
       voltage * (kDividerResistorUpperKOhm + kDividerResistorLowerKOhm) /
-      kDividerResistorLowerKOhm;
+          kDividerResistorLowerKOhm;
   return battery_voltage;
 }

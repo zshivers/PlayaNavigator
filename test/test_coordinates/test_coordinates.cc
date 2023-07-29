@@ -68,7 +68,7 @@ constexpr PlayaMapConfig kPlayaMapConfig = {
 TEST(PlayaMapConfigValid, ConfigInvalidIfRoadsAreNotMonoticallyIncreasing) {
   constexpr PlayaMapConfig kTestConfig = {
       .center = {.lat = 0.0, .lon = 0.0},
-      .trash_fence_radius_m = feetToMeters(2000.0),
+      .rotation_deg = -45.0,
       .roads = {{
           {'S', feetToMeters(100)},
           {'A', feetToMeters(200)},

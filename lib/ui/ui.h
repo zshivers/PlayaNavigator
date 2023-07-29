@@ -37,4 +37,5 @@ class Ui {
   AutoShutdown auto_shutdown_;
   uint32_t last_button_press_ms_ = 0;
   unsigned int brightness_index_ = 0;
+  AutoShutdown::ShutdownReason shutdown_reason_ = AutoShutdown::ShutdownReason::kNoShutdown;
 };

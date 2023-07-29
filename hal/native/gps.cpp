@@ -7,7 +7,7 @@
 #include <string>
 #include <thread>
 
-Gps::Gps() {
+void Gps::Start() {
   static auto io_thread = std::thread([&] {
     std::string s;
     while (!error && std::getline(std::cin, s, '\n')) {

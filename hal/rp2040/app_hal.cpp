@@ -62,7 +62,7 @@ void clock_setup() {
 }
 
 void hal_setup(void) {
-  // clock_setup();
+  clock_setup();
 
   // Built-in LED off to save power.
   gpio_set_function(kPicoLedPin, GPIO_FUNC_SIO);

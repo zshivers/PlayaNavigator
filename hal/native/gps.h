@@ -8,8 +8,8 @@
 
 class Gps {
  public:
-  Gps();
-  void Update() {}
+  void Start();
+  void Update(uint32_t millis) {}
   GpsInfo gps_info();
 
  private:

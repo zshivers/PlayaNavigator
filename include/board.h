@@ -28,3 +28,5 @@ constexpr int kGpsEnablePin = 11;
 constexpr int kGpsPpsPin = 16;
 constexpr int kChargingPin = 3;
 constexpr int kUsbPluggedPin = 24;
+
+constexpr int kSystemClockFreqHz = 48'000'000;

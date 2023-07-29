@@ -5,7 +5,7 @@
 class Backlight {
  public:
   Backlight(int led_white_pin, int led_r_pin, int led_g_pin, int led_b_pin);
-  void SetBrightness(uint8_t brightness);
+  void SetBrightness(float brightness);
   void SetColor(uint8_t w, uint8_t r, uint8_t g, uint8_t b);
 
  private:

@@ -1,6 +1,5 @@
 #include "ui_diagnostics.h"
 
-#include <Arduino.h>
 #include <stdio.h>
 
 #include "coordinates.h"

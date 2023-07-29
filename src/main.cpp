@@ -25,10 +25,6 @@ OneButton button_c(kButtonCPin);
 OneButton button_d(kButtonDPin);
 OneButton button_e(kButtonEPin);
 
-#ifdef PLATFORM_ARDUINO
-#include <Arduino.h>
-#endif
-
 void button_a_press_cb() { ui->ButtonPress(Ui::Button::kA); }
 void button_b_press_cb() { ui->ButtonPress(Ui::Button::kB); }
 void button_c_press_cb() { ui->ButtonPress(Ui::Button::kC); }
@@ -49,19 +45,13 @@ void setup() {
   // power on.
   power.power_enable(true);
 
-  // Immediately shutdown if battery voltage is too low.
-  // if (battery_voltage() < 3.2) {
-  //   power_enable(false);
-  //   sleep_ms(1000);
-  // }
-
   power.gps_enable(true);
 
   hal_setup();
 
   backlight = new Backlight(kBacklightWhitePin, kBacklightRedPin,
                             kBacklightGreenPin, kBacklightBluePin);
-  backlight->SetColor(255, 0, 0, 0);
+  backlight->SetColor(1.0, 0, 0, 0);
   ui = new Ui(power, backlight);
 
   gps.Start();
