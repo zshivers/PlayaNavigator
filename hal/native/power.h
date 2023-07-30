@@ -9,4 +9,5 @@ class Power {
   void gps_enable(bool on);
   bool gps_pps() const;
   bool usb_plugged();
+  float temperature() const;
 };

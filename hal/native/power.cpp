@@ -13,3 +13,5 @@ bool Power::battery_charging() { return false; }
 float Power::battery_voltage() { return 3.8; }
 
 bool Power::usb_plugged() { return false; }
+
+float Power::temperature() const { return 20.0f; }
