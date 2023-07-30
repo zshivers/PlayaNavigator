@@ -9,6 +9,7 @@ void Power::Start() {
   // ADC setup.
   adc_init();
   adc_gpio_init(kVSysAdcInputPin);  // Connected to resistor divider on VSYS.
+  adc_set_temp_sensor_enabled(true);
 
   // Power enable.
   gpio_set_function(kPowerEnablePin, GPIO_FUNC_SIO);
@@ -72,4 +73,11 @@ float Power::battery_voltage() const {
       voltage * (kDividerResistorUpperKOhm + kDividerResistorLowerKOhm) /
           kDividerResistorLowerKOhm;
   return battery_voltage;
+}
+
+float Power::temperature() const {
+  adc_select_input(4);
+  const float adc_voltage = adc_read() * 3.3f / 4096.0f;
+  float temp = 27 - (adc_voltage - 0.706) / 0.001721;
+  return temp;
 }
