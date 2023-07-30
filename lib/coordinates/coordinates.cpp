@@ -107,20 +107,19 @@ PlayaAddress LatLonToAddress(const PlayaMapConfig& pmc, const LatLon& ll) {
   const PlayaCoords pc = LatLonToPlayaCoords(pmc, ll);
 
   PlayaAddress address;
-  double clock_hours = pc.angle_deg / 360.0 * 12.0;
+  double clock_hours = pc.angle_deg * 12.0 / 360.0;
   if (clock_hours < 0.0) clock_hours += 12.0;
 
   // Round to nearest 5 minutes.
-  constexpr double kRoundingDuration_hours = 5.0 / 60.0;
-  clock_hours = std::round(clock_hours / kRoundingDuration_hours) *
-                kRoundingDuration_hours;
+  constexpr double kRoundingDenom = 60 / 5;
+  clock_hours = std::round(clock_hours * kRoundingDenom) / kRoundingDenom;
 
   // Split into hours and minutes.
   double clock_integral;
   const double clock_fractional = std::modf(clock_hours, &clock_integral);
-  address.hour = static_cast<uint8_t>(clock_integral);
+  address.hour = std::round(clock_integral);
   if (address.hour == 0) address.hour = 12;
-  address.minute = static_cast<uint8_t>(clock_fractional * 60);
+  address.minute = std::round(clock_fractional * 60.0);
   if (address.minute == 60) address.minute = 0;
 
   address.radius_m = pc.radius_m;
@@ -144,4 +143,11 @@ PlayaAddress LatLonToAddress(const PlayaMapConfig& pmc, const LatLon& ll) {
   }
 
   return address;
+}
+
+LatLon GetOffsetLocation(const LatLon& center, double delta_x_meters,
+                         double delta_y_meters) {
+  // https://gis.stackexchange.com/questions/2951/algorithm-for-offsetting-a-latitude-longitude-by-some-amount-of-meters
+  return {.lat = center.lat + delta_y_meters / 111111.0,
+          .lon = center.lon + delta_x_meters / (111111.0 * std::cos(degToRad(center.lon)))};
 }

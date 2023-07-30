@@ -82,3 +82,8 @@ double distanceBetween(const LatLon& point1, const LatLon& point2);
 
 // Return the course in degrees from point1 to point2.
 double courseTo(const LatLon& point1, const LatLon& point2);
+
+// From a center lat/lon location, offset by some amount of meters in each direction.
+// Only use for small distances.
+LatLon GetOffsetLocation(const LatLon& center, double delta_x_meters,
+                         double delta_y_meters);
