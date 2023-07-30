@@ -5,11 +5,9 @@
 
 constexpr float kMinBatteryVoltage = 3.20f;
 constexpr double kMinSpeed_mph = 0.25;
-// constexpr uint32_t kActiveTimeout_ms = 1000 * 60 * 5;       // 5 mins.
-// constexpr uint32_t kInteractionTimeout_ms = 1000 * 60 * 1;  // 1 min.
-constexpr uint32_t kActiveTimeout_ms = 1000 * 10;
-constexpr uint32_t kInteractionTimeout_ms = 1000 * 10;
-constexpr uint32_t kBatteryLowTimeout_ms = 10 * 1000;       // 10 sec.
+constexpr uint32_t kActiveTimeout_ms = 1000 * 60 * 5;       // 5 mins.
+constexpr uint32_t kInteractionTimeout_ms = 1000 * 60 * 1;  // 1 min.
+constexpr uint32_t kBatteryLowTimeout_ms = 10 * 1000;  // 10 sec.
 
 AutoShutdown::AutoShutdown(Power& power)
     : power_(power),
@@ -33,18 +31,19 @@ void AutoShutdown::Update(uint32_t millis, uint32_t last_interaction_time_ms,
     battery_low_deadline_ms_ = millis + kBatteryLowTimeout_ms;
   }
 
-  if (battery_low_deadline_ms_ - (int32_t)millis < 5'000) {
+  // The reason for shutdown is determined by priority order of the current
+  // timeouts.
+  if (battery_low_deadline_ms_ - (int32_t)millis < 5000) {
     reason_ = ShutdownReason::kBatteryLow;
-  } else if (active_deadline_ms_ - (int32_t)millis < 5'000) {
+  } else if (active_deadline_ms_ - (int32_t)millis < 5000) {
     reason_ = ShutdownReason::kInactivity;
   } else {
     reason_ = ShutdownReason::kNoShutdown;
   }
 
+  // Shutdown the power when any deadline expires.
   const uint32_t deadline_ms_ =
       std::min(active_deadline_ms_, battery_low_deadline_ms_);
-
-  // Shutdown the power when the deadline expires.
   if (millis > deadline_ms_) {
     power_.power_enable(false);
   }
