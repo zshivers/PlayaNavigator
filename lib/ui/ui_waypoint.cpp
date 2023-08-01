@@ -10,6 +10,9 @@
 
 namespace {
 
+constexpr double kMinDistanceToShowDirection_m = 9;
+constexpr double kDirectionEstimationMinDistanceChange_m = 3.0;
+
 void rotate_points(lv_point_t point_in[], int point_count,
                    lv_point_t rotation_point, float angle_deg) {
   const float& x = rotation_point.x;
@@ -56,7 +59,7 @@ LatLon FindNearestBathroom(LatLon current_location) {
 //  90 = Right
 // 180 = Down
 // 270 = Left
-void UiWaypoint::draw_arrow(float angle_deg) {
+void UiWaypoint::DrawDirectionArrow(float angle_deg) {
   lv_canvas_fill_bg(arrow_canvas_, lv_color_white(), LV_OPA_COVER);
 
   static lv_draw_rect_dsc_t dsc;
@@ -89,7 +92,7 @@ void UiWaypoint::draw_arrow(float angle_deg) {
 }
 
 // Draw a filled-in circle in the middle of the canvas.
-void UiWaypoint::draw_circle() {
+void UiWaypoint::DrawCircle() {
   static lv_draw_arc_dsc_t dsc;
   lv_draw_arc_dsc_init(&dsc);
   dsc.color = lv_color_black();
@@ -122,15 +125,33 @@ UiWaypoint::UiWaypoint(Backlight* backlight) : UiBase(), backlight_(backlight) {
   lv_canvas_set_buffer(arrow_canvas_, cbuf, kCanvasWidth, kCanvasHeight,
                        LV_IMG_CF_TRUE_COLOR);
 
+  address_label_ = lv_label_create(window_);
+  lv_obj_set_size(address_label_, LV_PCT(100), 11);
+  lv_obj_set_flex_flow(address_label_, LV_FLEX_FLOW_ROW);
+  lv_obj_set_flex_align(address_label_, LV_FLEX_ALIGN_START,
+                        LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+  lv_label_set_text(address_label_, "");
+
   static lv_style_t style;
   lv_style_init(&style);
   lv_style_set_radius(&style, 0);
   lv_style_set_border_color(&style, lv_color_black());
+  // lv_style_set_border_width(&style, 1);
   lv_style_set_text_font(&style, &lv_font_unscii_16);
   lv_style_set_text_align(&style, LV_TEXT_ALIGN_CENTER);
 
   lv_obj_add_style(distance_label_, &style, 0);
   lv_obj_set_flex_grow(distance_label_, 1);
+
+  static lv_style_t address_style;
+  lv_style_init(&address_style);
+  lv_style_set_radius(&address_style, 0);
+  lv_style_set_border_color(&address_style, lv_color_black());
+  // lv_style_set_border_width(&address_style, 1);
+  lv_style_set_text_font(&address_style, &lv_font_unscii_8);
+  lv_style_set_text_align(&address_style, LV_TEXT_ALIGN_CENTER);
+
+  lv_obj_add_style(address_label_, &address_style, 0);
 }
 
 void UiWaypoint::Update(GpsInfo gps_info) {
@@ -145,7 +166,8 @@ void UiWaypoint::Update(GpsInfo gps_info) {
 
   if (!gps_info.valid) {
     lv_label_set_text(distance_label_, "No\nGPS");
-    draw_circle();
+    DrawCircle();
+    UpdateAddressText(MakeInvalid<LatLon>({}));
     return;
   }
 
@@ -154,7 +176,8 @@ void UiWaypoint::Update(GpsInfo gps_info) {
     waypoint = ws_.Read(current_waypoint_index_);
     if (!waypoint.valid) {
       lv_label_set_text(distance_label_, "Not\nSet");
-      draw_circle();
+      DrawCircle();
+      lv_label_set_text(address_label_, "Prs&Hold to Set");
       return;
     }
   } else {
@@ -168,27 +191,42 @@ void UiWaypoint::Update(GpsInfo gps_info) {
   if (distance_ft <= 9999.0) {
     snprintf(distance_text, sizeof(distance_text), "%d\nft",
              static_cast<int>(distance_ft));
-  } else {
+  } else if (distance_ft <= milesToFeet(1000.0)) {
     snprintf(distance_text, sizeof(distance_text), "%.1f\nmi",
+             feetToMiles(distance_ft));
+  } else {
+    snprintf(distance_text, sizeof(distance_text), "%.0f\nmi",
              feetToMiles(distance_ft));
   }
   lv_label_set_text(distance_label_, distance_text);
 
   // Compute course required to get to waypoint.
-  const double course_to_waypoint = courseTo(waypoint.value, gps_info.location);
-  double course_diff = course_to_waypoint - gps_info.course_deg;
-  if (course_diff > 360.0)
-    course_diff -= 360.0;
-  else if (course_diff < -360.0)
-    course_diff += 360.0;
+  EstimateDirection(gps_info);
+  if (course_deg_.valid) {
+    const double course_to_waypoint =
+        courseTo(gps_info.location, waypoint.value);
+    double course_diff = course_to_waypoint - course_deg_.value;
+    // std::cout << "Course to Waypoint: " << course_to_waypoint << " , Course:
+    // " << course_deg_.value << "\n";
+    if (course_diff > 360.0)
+      course_diff -= 360.0;
+    else if (course_diff < -360.0)
+      course_diff += 360.0;
 
-  if (distance_ft < 40.0 || gps_info_.speed_mph < 2.0) {
-    // Direction information is not very stable if waypoint is very close or if
-    // speed is low. Just show a circle instead of a direction arrow.
-    draw_circle();
+    if (distance_ft < kMinDistanceToShowDirection_m) {
+      // Direction information is not very stable if waypoint is very close. 
+      // Just show a circle instead of a direction arrow.
+      DrawCircle();
+    } else {
+      DrawDirectionArrow(course_diff);
+    }
   } else {
-    draw_arrow(course_diff);
+    // No course information is available.
+    DrawCircle();
   }
+
+  // TODO optimize so this isn't called as much.
+  UpdateAddressText(waypoint);
 }
 
 void UiWaypoint::IncrementWaypoint() {
@@ -202,4 +240,58 @@ void UiWaypoint::SaveWaypoint() {
   if (mode_ != Mode::kWaypoints) return;
   if (!gps_info_.valid) return;
   ws_.Write(current_waypoint_index_, gps_info_.location);
+}
+
+void UiWaypoint::UpdateAddressText(MaybeValid<LatLon> waypoint) {
+  if (!waypoint.valid) {
+    lv_label_set_text(address_label_, "");
+    return;
+  }
+  const PlayaAddress address = LatLonToAddress(kPlayaMapConfig, waypoint.value);
+  char text[50];
+  if (address.road.valid) {
+    // If on a road, show radial and the road letter.
+    snprintf(text, sizeof(text), "%02d:%02d & %c", address.hour, address.minute,
+             address.road.value);
+  } else {
+    // If not on a road, show radial and distance from man. Switch between feet
+    // and miles.
+    const double feetToMan = metersToFeet(address.radius_m);
+    if (feetToMan <= 9999.0) {
+      snprintf(text, sizeof(text), "%02d:%02d & %d ft", address.hour,
+               address.minute, static_cast<int>(feetToMan));
+    } else {
+      const double milesToMan = metersToMiles(address.radius_m);
+      snprintf(text, sizeof(text), "%02d:%02d & %.1f mi", address.hour,
+               address.minute, milesToMan);
+    }
+  }
+  lv_label_set_text(address_label_, text);
+}
+
+void UiWaypoint::EstimateDirection(const GpsInfo& gps_info) {
+  if (!gps_info.valid) return;
+  // TODO reset the direction start and end points if GPS is invalid for too
+  // long.
+
+  if (!dir_initial.valid) {
+    // If this is the first valid GPS point, record it as the initial direction
+    // point.
+    dir_initial = MakeValid<LatLon>(gps_info.location);
+  } else if (!dir_end.valid &&
+             distanceBetween(dir_initial.value, gps_info.location) >
+                 kDirectionEstimationMinDistanceChange_m) {
+    dir_end = MakeValid<LatLon>(gps_info.location);
+  }
+
+  if (dir_initial.valid && dir_end.valid) {
+    if (distanceBetween(dir_end.value, gps_info.location) >
+        kDirectionEstimationMinDistanceChange_m) {
+      dir_initial = MakeValid<LatLon>(dir_end.value);
+      dir_end = MakeValid<LatLon>(gps_info.location);
+    }
+    course_deg_ = MakeValid<double>(courseTo(dir_initial.value, dir_end.value));
+  } else {
+    course_deg_ = MakeInvalid<double>(0.0);
+  }
 }

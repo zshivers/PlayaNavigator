@@ -30,6 +30,9 @@ const char* GpsStatusString(uint32_t millis, const GpsInfo& gps_info) {
     return "Poor";
   }
 }
+
+float inline degCtoF(float deg_c) { return (9.0 / 5.0) * deg_c + 32; }
+
 }  // namespace
 
 UiDiagnostics::UiDiagnostics(Power& power) : UiBase(), power_(power) {
@@ -84,16 +87,18 @@ UART:%-3d PPS:%d)";
                gps_info.location.lat, gps_info.location.lon,
                static_cast<int>(gps_info.satellites), pps_state,
                uart_message_count_, pps_count_);
-      
+
       break;
     }
 
     case kBattery: {
       constexpr char format[] = R"(Voltage:%.2f V
  Charge:%d
-    USB:%d)";
+    USB:%d
+   Temp:%.1f F)";
       snprintf(text, sizeof(text), format, power_.battery_voltage(),
-               power_.battery_charging(), power_.usb_plugged());
+               power_.battery_charging(), power_.usb_plugged(),
+               degCtoF(power_.temperature()));
       break;
     }
   }

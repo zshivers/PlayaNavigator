@@ -18,6 +18,8 @@ UiShutdown::UiShutdown() : UiBase() {
   lv_style_set_radius(&text_style, 0);
   lv_style_set_border_color(&text_style, lv_color_black());
   lv_style_set_text_font(&text_style, &lv_font_unscii_8);
+  lv_style_set_width(&text_style, LV_PCT(100));
+  lv_style_set_text_align(&text_style, LV_TEXT_ALIGN_CENTER);
 
   static lv_style_t container_style;
   lv_style_init(&container_style);
@@ -44,7 +46,7 @@ void UiShutdown::update(uint32_t millis, AutoShutdown::ShutdownReason shutdown_r
       lv_label_set_text(text_, "No activity\nShutting down");
       break;
     case AutoShutdown::ShutdownReason::kNoShutdown:
-      lv_label_set_text(text_, "No shutdown imminent");
+      lv_label_set_text(text_, "No shutdown\nimminent");
       break;
   }
 }

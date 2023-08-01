@@ -6,6 +6,7 @@
 #include "lvgl.h"
 #include "ui_base.h"
 #include "waypoint_storage.h"
+#include "periodic.h"
 
 // Waypoint screen is used to navigate from the current location to a fixed
 // stored location. It shows the distance and course to the waypoint. Distance
@@ -33,22 +34,31 @@ class UiWaypoint : public UiBase {
   void SaveWaypoint();
 
  private:
-  void draw_arrow(float angle_deg);
-  void draw_circle();
+  void DrawDirectionArrow(float angle_deg);
+  void DrawCircle();
+  void UpdateAddressText(MaybeValid<LatLon> waypoint);
+  void EstimateDirection(const GpsInfo& gps_info);
 
-  constexpr static int kCanvasWidth = 40;
-  constexpr static int kCanvasHeight = 40;
+  WaypointStorage ws_;
+  Backlight* backlight_;
+  GpsInfo gps_info_;
 
   constexpr static uint8_t kMaxTotalWaypoints = 5;
   const std::array<std::string, kMaxTotalWaypoints> waypoint_names_ = {
       "WAYPOINT CAMP", "WAYPOINT 1", "WAYPOINT 2", "WAYPOINT 3", "WAYPOINT 4"};
 
+  constexpr static int kCanvasWidth = 40;
+  constexpr static int kCanvasHeight = 40;
   lv_color_t cbuf[LV_CANVAS_BUF_SIZE_TRUE_COLOR(kCanvasWidth, kCanvasHeight)];
+
   Mode mode_ = Mode::kWaypoints;
   uint8_t current_waypoint_index_ = 0;
+
+  MaybeValid<LatLon> dir_initial;
+  MaybeValid<LatLon> dir_end;
+  MaybeValid<double> course_deg_;
+
   lv_obj_t* distance_label_;
   lv_obj_t* arrow_canvas_;
-  WaypointStorage ws_;
-  Backlight* backlight_;
-  GpsInfo gps_info_;
+  lv_obj_t* address_label_;
 };

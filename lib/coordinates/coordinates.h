@@ -14,6 +14,7 @@ constexpr double degToRad(const double deg) {
 constexpr double metersToFeet(const double meters) { return meters * 3.281; }
 constexpr double feetToMeters(const double feet) { return feet / 3.281; }
 constexpr double feetToMiles(const double feet) { return feet / 5280.0; }
+constexpr double milesToFeet(const double miles) { return miles * 5280.0; }
 constexpr double metersToMiles(const double feet) { return feet / 1609.34; }
 
 // Latitude and Longitude in decimal format.
