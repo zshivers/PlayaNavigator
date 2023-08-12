@@ -10,7 +10,7 @@ void PrintTo(const PlayaAddress& address, std::ostream* os) {
   if (address.road.valid) {
     *os << address.road.value;
   } else {
-    *os << address.radius_m << " meters";
+    *os << metersToFeet(address.radius_m) << " ft";
   }
   *os << ")";
 }
@@ -64,6 +64,28 @@ constexpr PlayaMapConfig kPlayaMapConfig = {
         {'I', feetToMeters(5460)},
         {'J', feetToMeters(5650)},
         {'K', feetToMeters(5840)},
+    }},
+};
+
+// 2023 Map
+constexpr PlayaMapConfig kPlaya2023MapConfig = {
+    .center = {.lat = 40.786400, .lon = -119.203500},
+    // True north/south line is along 4:30 = (360 deg / 12 h) * (6 - 4.5) = 45
+    // deg
+    .rotation_deg = -45.0,
+    .roads = {{
+        {'S', feetToMeters(2500)},
+        {'A', feetToMeters(2940)},
+        {'B', feetToMeters(3230)},
+        {'C', feetToMeters(3520)},
+        {'D', feetToMeters(3810)},
+        {'E', feetToMeters(4100)},
+        {'F', feetToMeters(4590)},
+        {'G', feetToMeters(4880)},
+        {'H', feetToMeters(5170)},
+        {'I', feetToMeters(5460)},
+        {'J', feetToMeters(5650)},
+        {'K', feetToMeters(5845)},
     }},
 };
 
@@ -209,7 +231,7 @@ TEST(LatLonToAddress, Cand3) {
   EXPECT_TRUE(AddressEqual(address, expected));
 }
 
-TEST(PlayaCoordsToAddress, Jand6) {
+TEST(LatLonToAddress, Jand6) {
   PlayaAddress address =
       LatLonToAddress(kPlayaMapConfig, {.lat = 40.776079, .lon = -119.217144});
   PlayaAddress expected = {
@@ -218,7 +240,7 @@ TEST(PlayaCoordsToAddress, Jand6) {
   PrintTo(address, &std::cout);
 }
 
-TEST(PlayaCoordsToAddress, Fand815) {
+TEST(LatLonToAddress, Fand815) {
   PlayaAddress address =
       LatLonToAddress(kPlayaMapConfig, {.lat = 40.791843, .lon = -119.218033});
   PlayaAddress expected = {
@@ -248,6 +270,51 @@ TEST(LatLonToAddress, ClockRoundedTo5Mins) {
       EXPECT_EQ(address.minute % 5, 0);  // Check rounded to 5 minutes.
     }
   }
+}
+
+TEST(LatLonToAddress2023, EsplanadeAnd10_2023) {
+  PlayaAddress address =
+      LatLonToAddress(kPlaya2023MapConfig, {.lat = 40.7929883, .lon = -119.2058906});
+  PlayaAddress expected = {
+      .hour = 10, .minute = 0, .road = MakeValid<char>('S')};
+  PrintTo(address, &std::cout);
+  EXPECT_TRUE(AddressEqual(address, expected));
+}
+
+TEST(LatLonToAddress2023, EsplanadeAnd2_2023) {
+  PlayaAddress address =
+      LatLonToAddress(kPlaya2023MapConfig, {.lat = 40.7845584, .lon = -119.1947878});
+  PlayaAddress expected = {
+      .hour = 2, .minute = 0, .road = MakeValid<char>('S')};
+  EXPECT_TRUE(AddressEqual(address, expected));
+  PrintTo(address, &std::cout);
+}
+
+TEST(LatLonToAddress2023, Cand3) {
+  PlayaAddress address =
+      LatLonToAddress(kPlaya2023MapConfig, {.lat = 40.7796292, .lon = -119.1945954});
+  PlayaAddress expected = {
+      .hour = 3, .minute = 0, .road = MakeValid<char>('C')};
+  EXPECT_TRUE(AddressEqual(address, expected));
+  PrintTo(address, &std::cout);
+}
+
+TEST(LatLonToAddress2023, Jand6) {
+  PlayaAddress address =
+      LatLonToAddress(kPlaya2023MapConfig, {.lat = 40.7754071, .lon = -119.2177962});
+  PlayaAddress expected = {
+      .hour = 6, .minute = 0, .road = MakeValid<char>('J')};
+  EXPECT_TRUE(AddressEqual(address, expected));
+  PrintTo(address, &std::cout);
+}
+
+TEST(LatLonToAddress2023, Fand815) {
+  PlayaAddress address =
+      LatLonToAddress(kPlaya2023MapConfig, {.lat = 40.7914487, .lon = -119.2192866});
+  PlayaAddress expected = {
+      .hour = 8, .minute = 15, .road = MakeValid<char>('F')};
+  EXPECT_TRUE(AddressEqual(address, expected));
+  PrintTo(address, &std::cout);
 }
 
 TEST(GetOffsetLocation, OffsetWithKnownCoordinates45Deg) {
@@ -285,6 +352,8 @@ TEST(GetOffsetLocation, OffsetWithKnownCoordinates30Deg) {
   EXPECT_NEAR(location.lat, 0.00781884223, kTolerance_deg);
   EXPECT_NEAR(location.lon, 0.00451425674, kTolerance_deg);
 }
+
+
 
 }  // namespace
 

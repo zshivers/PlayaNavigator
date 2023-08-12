@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 #include "coordinates.h"
@@ -25,4 +26,7 @@ class AutoShutdown {
   int32_t active_deadline_ms_ = 0;
   int32_t battery_low_deadline_ms_ = 0;
   ShutdownReason reason_ = ShutdownReason::kNoShutdown;
+  int32_t location_update_ms_ = 0;
+  std::array<LatLon, 10> location_history_;
+  int location_history_next_ = 0;
 };

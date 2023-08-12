@@ -1,9 +1,8 @@
 #include "gps.h"
 
-
 #include "TinyGPS++.h"
-#include "coordinates.h"
 #include "board.h"
+#include "coordinates.h"
 
 namespace {
 constexpr int8_t kTimeZoneOffsetFromUtc = -7;  // Pacific time
@@ -29,13 +28,12 @@ void Gps::Update(uint32_t millis) {
   }
   if (bytes_rx > 0) gps_info_.uart_time = millis;
 
-
   if (!tiny_gps_.location.isValid()) {
     return;
   }
 
   gps_info_.valid = true;
-  gps_info_.update_time = millis;
+  if (tiny_gps_.location.isUpdated()) gps_info_.update_time = millis;
   gps_info_.location.lat = tiny_gps_.location.lat();
   gps_info_.location.lon = tiny_gps_.location.lng();
 

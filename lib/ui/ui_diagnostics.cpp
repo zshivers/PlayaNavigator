@@ -4,6 +4,7 @@
 
 #include "coordinates.h"
 #include "lvgl.h"
+#include "playa_config.h"
 #include "power.h"
 
 namespace {
@@ -75,18 +76,28 @@ void UiDiagnostics::update(uint32_t millis, GpsInfo gps_info) {
 
   char text[110] = "";
   switch (page_) {
-    case kGps: {
+    case kGps1: {
       constexpr char format[] = R"( GPS:%s
 Time:%02d:%02d:%02d
  Lat:%.6f
  Lon:%.6f
-Sats:%-3d PPS:%d
-UART:%-3d PPS:%d)";
+Brng:%+4d deg
+ Spd:%.1f mph)";
       snprintf(text, sizeof(text), format, GpsStatusString(millis, gps_info),
                gps_info.hour, gps_info.minute, gps_info.second,
                gps_info.location.lat, gps_info.location.lon,
-               static_cast<int>(gps_info.satellites), pps_state,
-               uart_message_count_, pps_count_);
+               static_cast<int>(gps_info.course_deg), gps_info.speed_mph);
+      break;
+    }
+
+    case kGps2: {
+      constexpr char format[] = R"(   HDOP:%.1f
+   Sats:%-3d
+   UART:%-3d
+    PPS:%c%d)";
+      snprintf(text, sizeof(text), format, gps_info.hdop,
+               static_cast<int>(gps_info.satellites), uart_message_count_,
+               pps_state ? '*' : ' ', pps_count_);
 
       break;
     }
@@ -99,6 +110,17 @@ UART:%-3d PPS:%d)";
       snprintf(text, sizeof(text), format, power_.battery_voltage(),
                power_.battery_charging(), power_.usb_plugged(),
                degCtoF(power_.temperature()));
+      break;
+    }
+
+    case kMap: {
+      constexpr char format[] = R"( Map:%s
+Cntr:%.6f
+     %.6f
+  Bathrms:%d)";
+      snprintf(text, sizeof(text), format, kPlayaMapConfig.name,
+               kPlayaMapConfig.center.lat, kPlayaMapConfig.center.lon,
+               kBathroomLocations.size());
       break;
     }
   }
