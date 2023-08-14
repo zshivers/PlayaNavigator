@@ -20,5 +20,7 @@ class UiLocation : public UiBase {
   void update(GpsInfo gps_info);
 
  private:
+  void EnableBmLogoAnimation(bool enable);
   lv_obj_t* location_text_;
+  lv_obj_t* animimg_;
 };
