@@ -16,7 +16,4 @@ class Gps {
   GpsInfo gps_info_ = {.valid = false, .satellites = 4, .speed_mph = 0.0};
   std::mutex m;
   bool error = false;
-
-  int fd;
-  unsigned char buf[2048];
 };
