@@ -67,7 +67,8 @@ UiLocation::UiLocation() : UiBase() {
 
   animimg_ = lv_animimg_create(content_);
   lv_obj_center(animimg_);
-  lv_animimg_set_src(animimg_, (lv_img_dsc_t**)kSpinningManAnimationImages, 20);
+  // lv_animimg_set_src(animimg_, (lv_img_dsc_t**)kSpinningManAnimationImages, 20);
+  lv_animimg_set_src(animimg_, (const void**)kSpinningManAnimationImages, 20);
   lv_animimg_set_duration(animimg_, 2000);
   lv_animimg_set_repeat_count(animimg_, LV_ANIM_REPEAT_INFINITE);
   lv_animimg_start(animimg_);

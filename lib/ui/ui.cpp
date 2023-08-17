@@ -21,7 +21,10 @@ Ui::Ui(Power& power, Backlight* backlight)
   ui_waypoint_ = std::make_unique<UiWaypoint>(backlight);
   ui_diagnostics_ = std::make_unique<UiDiagnostics>(power_);
   ui_shutdown_ = std::make_unique<UiShutdown>();
-  SetMode(kLocation);
+  SetMode(kSplash);
+  // SetMode(kLocation);
+  // SetMode(kBathroom);
+  // ui_waypoint_->SetMode(UiWaypoint::Mode::kNearestBathroom);
 }
 
 void Ui::update(uint32_t millis) {
@@ -41,6 +44,15 @@ void Ui::update(uint32_t millis) {
   }
 
   switch (mode_) {
+    case Mode::kSplash:
+      if (first_update_) {
+        ui_splash_.Start();
+        first_update_ = false;
+      }
+      if (ui_splash_.Complete()) {
+        SetMode(kLocation);
+      }
+      break;
     case Mode::kLocation:
       ui_location_->update(gps_info_);
       break;
@@ -118,6 +130,9 @@ void Ui::ButtonLongPress(Ui::Button button) {
 
 void Ui::SetMode(Mode mode) {
   switch (mode) {
+    case Mode::kSplash:
+      lv_scr_load(ui_splash_.screen());
+      break;
     case Mode::kLocation:
       lv_scr_load(ui_location_->screen());
       break;

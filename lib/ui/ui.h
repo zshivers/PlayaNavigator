@@ -4,18 +4,26 @@
 
 #include "auto_shutdown.h"
 #include "backlight.h"
-#include "power.h"
 #include "coordinates.h"
 #include "lvgl.h"
+#include "power.h"
 #include "ui_diagnostics.h"
 #include "ui_location.h"
 #include "ui_shutdown.h"
+#include "ui_splash.h"
 #include "ui_waypoint.h"
 
 class Ui {
  public:
   Ui(Power& power, Backlight* backlight);
-  enum Mode { kLocation, kWaypoint, kBathroom, kDiagnostics, kShutdown };
+  enum Mode {
+    kSplash,
+    kLocation,
+    kWaypoint,
+    kBathroom,
+    kDiagnostics,
+    kShutdown
+  };
   void SetMode(Mode mode);
   void update(uint32_t millis);
 
@@ -27,6 +35,7 @@ class Ui {
 
  private:
   Mode mode_;
+  UiSplash ui_splash_;
   std::unique_ptr<UiLocation> ui_location_;
   std::unique_ptr<UiWaypoint> ui_waypoint_;
   std::unique_ptr<UiDiagnostics> ui_diagnostics_;
@@ -35,7 +44,9 @@ class Ui {
   Backlight* backlight_;
   GpsInfo gps_info_;
   AutoShutdown auto_shutdown_;
+  bool first_update_ = true;
   uint32_t last_button_press_ms_ = 0;
   unsigned int brightness_index_ = 0;
-  AutoShutdown::ShutdownReason shutdown_reason_ = AutoShutdown::ShutdownReason::kNoShutdown;
+  AutoShutdown::ShutdownReason shutdown_reason_ =
+      AutoShutdown::ShutdownReason::kNoShutdown;
 };

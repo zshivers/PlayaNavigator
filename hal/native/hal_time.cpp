@@ -1,3 +1,15 @@
 #include "hal_time.h"
+#include <chrono>
+#include <iostream>
 
-uint32_t time_millis() { return 0; }
+namespace {
+using hr_clock = std::chrono::high_resolution_clock;
+typedef std::chrono::duration<float, std::milli> duration;
+}
+
+const auto kProgramStartTime = hr_clock::now();
+
+uint32_t time_millis() { 
+    duration elapsed = hr_clock::now() - kProgramStartTime;
+    return static_cast<uint32_t>(elapsed.count());
+}   

@@ -117,7 +117,7 @@ Brng:%+4d deg
       constexpr char format[] = R"( Map:%s
 Cntr:%.6f
      %.6f
-  Bathrms:%d)";
+  Bathrms:%zu)";
       snprintf(text, sizeof(text), format, kPlayaMapConfig.name,
                kPlayaMapConfig.center.lat, kPlayaMapConfig.center.lon,
                kBathroomLocations.size());
