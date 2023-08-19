@@ -55,7 +55,8 @@ void setup() {
   backlight = new Backlight(kBacklightWhitePin, kBacklightRedPin,
                             kBacklightGreenPin, kBacklightBluePin);
   backlight->SetColor(1.0, 0, 0, 0);
-  ui = new Ui(usb_storage.GetPlayaMapConfig(), usb_storage.GetBathrooms(), power, backlight);
+  ui = new Ui(usb_storage.GetPlayaMapConfig(), usb_storage.GetBathrooms(),
+              power, backlight);
 
   gps.Start();
 

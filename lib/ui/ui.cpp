@@ -1,7 +1,6 @@
 #include "ui.h"
 
 #include <iostream>
-#include <memory>
 
 #include "auto_shutdown.h"
 #include "coordinates.h"
@@ -15,23 +14,25 @@
 // shutdown UI.
 constexpr uint32_t kShutdownWarningTimeout_ms = 10 * 1000;  // 30 sec.
 
-Ui::Ui(const PlayaMapConfig& map_config, const std::vector<LatLon>& bathrooms, Power& power, Backlight* backlight)
-    : power_(power), backlight_(backlight), auto_shutdown_(power) {
-  ui_location_ = std::make_unique<UiLocation>(map_config);
-  ui_waypoint_ = std::make_unique<UiWaypoint>(map_config, bathrooms, backlight);
-  ui_diagnostics_ = std::make_unique<UiDiagnostics>(map_config, power_);
-  ui_shutdown_ = std::make_unique<UiShutdown>();
-  // SetMode(kSplash);
+Ui::Ui(const PlayaMapConfig& map_config, const std::vector<LatLon>& bathrooms,
+       Power& power, Backlight* backlight)
+    : ui_location_(map_config),
+      ui_waypoint_(map_config, bathrooms, backlight),
+      ui_diagnostics_(map_config, power_),
+      power_(power),
+      backlight_(backlight),
+      auto_shutdown_(power) {
+  SetMode(kSplash);
   // SetMode(kLocation);
-  SetMode(kBathroom);
-  ui_waypoint_->SetMode(UiWaypoint::Mode::kNearestBathroom);
+  // SetMode(kBathroom);
+  // ui_waypoint_.SetMode(UiWaypoint::Mode::kNearestBathroom);
 }
 
 void Ui::update(uint32_t millis) {
   auto_shutdown_.Update(millis, last_button_press_ms_, gps_info_);
 
-  // If we're about to shut down, switch to the Shutdown UI to display the reason.
-  // If the reason cleared, go back to the Location UI.
+  // If we're about to shut down, switch to the Shutdown UI to display the
+  // reason. If the reason cleared, go back to the Location UI.
   using ShutdownReason = AutoShutdown::ShutdownReason;
   const ShutdownReason last_shutdown_reason_ = shutdown_reason_;
   shutdown_reason_ = auto_shutdown_.reason();
@@ -54,17 +55,17 @@ void Ui::update(uint32_t millis) {
       }
       break;
     case Mode::kLocation:
-      ui_location_->update(gps_info_);
+      ui_location_.update(gps_info_);
       break;
     case Mode::kWaypoint:
     case Mode::kBathroom:
-      ui_waypoint_->Update(gps_info_);
+      ui_waypoint_.Update(gps_info_);
       break;
     case Mode::kDiagnostics:
-      ui_diagnostics_->update(millis, gps_info_);
+      ui_diagnostics_.update(millis, gps_info_);
       break;
     case Mode::kShutdown:
-      ui_shutdown_->update(millis, shutdown_reason_);
+      ui_shutdown_.update(millis, shutdown_reason_);
       break;
     default:
       break;
@@ -76,7 +77,7 @@ void Ui::ButtonPress(Ui::Button button) {
   switch (button) {
     case Button::kA:
       if (mode_ == Mode::kDiagnostics) {
-        ui_diagnostics_->GoToNextPage();
+        ui_diagnostics_.GoToNextPage();
       } else {
         SetMode(Mode::kLocation);
       }
@@ -84,15 +85,15 @@ void Ui::ButtonPress(Ui::Button button) {
     case Button::kB:
       // If already in the waypoint mode, go to next waypoint.
       if (mode_ == Mode::kWaypoint) {
-        ui_waypoint_->IncrementWaypoint();
+        ui_waypoint_.IncrementWaypoint();
       } else {
         SetMode(Mode::kWaypoint);
-        ui_waypoint_->SetMode(UiWaypoint::Mode::kWaypoints);
+        ui_waypoint_.SetMode(UiWaypoint::Mode::kWaypoints);
       }
       break;
     case Button::kC:
       SetMode(Mode::kBathroom);
-      ui_waypoint_->SetMode(UiWaypoint::Mode::kNearestBathroom);
+      ui_waypoint_.SetMode(UiWaypoint::Mode::kNearestBathroom);
       break;
     case Button::kD: {
       constexpr std::array<float, 4> kBrightnessSteps = {0, 0.3, 0.45, 0.7};
@@ -117,7 +118,7 @@ void Ui::ButtonLongPress(Ui::Button button) {
       }
       break;
     case Button::kB:
-      ui_waypoint_->SaveWaypoint();
+      ui_waypoint_.SaveWaypoint();
       break;
     case Button::kE:
       // Turn off the power to the battery.
@@ -134,17 +135,17 @@ void Ui::SetMode(Mode mode) {
       lv_scr_load(ui_splash_.screen());
       break;
     case Mode::kLocation:
-      lv_scr_load(ui_location_->screen());
+      lv_scr_load(ui_location_.screen());
       break;
     case Mode::kWaypoint:
     case Mode::kBathroom:
-      lv_scr_load(ui_waypoint_->screen());
+      lv_scr_load(ui_waypoint_.screen());
       break;
     case Mode::kDiagnostics:
-      lv_scr_load(ui_diagnostics_->screen());
+      lv_scr_load(ui_diagnostics_.screen());
       break;
     case Mode::kShutdown:
-      lv_scr_load(ui_shutdown_->screen());
+      lv_scr_load(ui_shutdown_.screen());
       break;
     default:
       break;

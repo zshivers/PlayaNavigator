@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory>
-
 #include "auto_shutdown.h"
 #include "backlight.h"
 #include "coordinates.h"
@@ -15,7 +13,8 @@
 
 class Ui {
  public:
-  Ui(const PlayaMapConfig& map_config, const std::vector<LatLon>& bathrooms, Power& power, Backlight* backlight);
+  Ui(const PlayaMapConfig& map_config, const std::vector<LatLon>& bathrooms,
+     Power& power, Backlight* backlight);
   enum Mode {
     kSplash,
     kLocation,
@@ -36,10 +35,10 @@ class Ui {
  private:
   Mode mode_;
   UiSplash ui_splash_;
-  std::unique_ptr<UiLocation> ui_location_;
-  std::unique_ptr<UiWaypoint> ui_waypoint_;
-  std::unique_ptr<UiDiagnostics> ui_diagnostics_;
-  std::unique_ptr<UiShutdown> ui_shutdown_;
+  UiLocation ui_location_;
+  UiWaypoint ui_waypoint_;
+  UiDiagnostics ui_diagnostics_;
+  UiShutdown ui_shutdown_;
   Power& power_;
   Backlight* backlight_;
   GpsInfo gps_info_;
