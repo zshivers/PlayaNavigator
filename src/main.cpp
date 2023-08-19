@@ -8,9 +8,9 @@
 #include "maybe_valid.h"
 #include "power.h"
 #include "ui.h"
+#include "usb_storage.h"
 #include "waypoint_storage.h"
 
-// #include "pico/time.h"
 #ifdef PLATFORM_NATIVE
 #include <iostream>
 #endif
@@ -19,6 +19,7 @@ Ui* ui;
 Gps gps;
 Power power;
 Backlight* backlight;
+UsbStorage usb_storage;
 OneButton button_a(kButtonAPin);
 OneButton button_b(kButtonBPin);
 OneButton button_c(kButtonCPin);
@@ -49,10 +50,12 @@ void setup() {
 
   hal_setup();
 
+  usb_storage.Start();
+
   backlight = new Backlight(kBacklightWhitePin, kBacklightRedPin,
                             kBacklightGreenPin, kBacklightBluePin);
   backlight->SetColor(1.0, 0, 0, 0);
-  ui = new Ui(power, backlight);
+  ui = new Ui(usb_storage.GetPlayaMapConfig(), usb_storage.GetBathrooms(), power, backlight);
 
   gps.Start();
 
@@ -81,19 +84,15 @@ void loop() {
   const uint32_t ms = time_millis();
   gps.Update(ms);
 
-  // const absolute_time_t start = get_absolute_time();
   ui->OnGpsInfo(gps.gps_info());
   ui->update(ms);
-  // const absolute_time_t end = get_absolute_time();
-
-  // Serial.println(absolute_time_diff_us(start, end));
 }
 
 #ifdef PLATFORM_NATIVE
 int main(void) {
   setup();
   while (true) {
-    loop(); 
+    loop();
   }
 }
 #endif

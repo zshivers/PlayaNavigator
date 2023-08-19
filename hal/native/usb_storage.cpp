@@ -1,72 +1,18 @@
-#pragma once
+
+#include "usb_storage.h"
+
+#include <ArduinoJson.h>
+
+#include <iostream>
 
 #include "coordinates.h"
 
-#if 0
-constexpr PlayaMapConfig kPlayaMapConfig = {
-    .name = "SF Test",
-    .center = {.lat = 40.787030, .lon = -119.202740},
-    // True north/south line is along 4:30 = (360 deg / 12 h) * (6 - 4.5) = 45
-    // deg
-    .rotation_deg = -45.0,
-    .roads = {{
-        {'S', feetToMeters(2500)},
-        {'A', feetToMeters(2940)},
-        {'B', feetToMeters(3230)},
-        {'C', feetToMeters(3520)},
-        {'D', feetToMeters(3810)},
-        {'E', feetToMeters(4100)},
-        {'F', feetToMeters(4590)},
-        {'G', feetToMeters(4880)},
-        {'H', feetToMeters(5170)},
-        {'I', feetToMeters(5460)},
-        {'J', feetToMeters(5650)},
-        {'K', feetToMeters(5840)},
-    }},
-};
+namespace {
 
-constexpr std::array<LatLon, 5> kBathroomLocations = {{
-    {40.787030, -119.202740},
-    {40.787030, -119.202740},
-    {40.787030, -119.202740},
-    {40.787030, -119.202740},
-    {40.787030, -119.202740},
-}};
-#endif
-
-#if 0
-// SF local config for testing!
-constexpr PlayaMapConfig kPlayaMapConfig = {
-    .name = "SF Test",
-    .center = {.lat = 37.776183400365476, .lon = -122.41379170684557},
-    .rotation_deg = -45.0,
-    .roads = {{
-        {'S', 71.0},   // Natoma
-        {'A', 137.0},  // Howard
-        {'B', 204.0},  // Tehama
-        {'C', 262.0},  // Clementina
-        {'D', 329.9},  // Folsom
-        {'E', 398.0},  // Ringold
-        {'F', 500.0},
-        {'G', 600.0},
-        {'H', 700.0},
-        {'I', 800.0},
-        {'J', 900.0},
-        {'K', 1000.0},
-    }},
-};
-
-constexpr std::array<LatLon, 3> kBathroomLocations = {{
-    {37.775913255761346, -122.41415061528251},  // 9th & Minna.
-    {37.775291235690105, -122.41572152148551},  // 10th & Mission
-    {37.77483219054346, -122.41139189301217},   // Middle of clementina
-}};
-#endif
-
-// 2023 Map
+// 2023 map.
 // Manually entered using the info from:
 // https://bm-innovate.s3.amazonaws.com/2023/2023%20BRC%20Measurements.pdf
-constexpr PlayaMapConfig kPlayaMapConfig = {
+constexpr PlayaMapConfig kPlayaMapConfig2023 = {
     .name = {'B', 'M', ' ', '2', '0', '2', '3',
              '\0'},  // Annoying hack due to compiler issue.
     .center = {.lat = 40.786400, .lon = -119.203500},
@@ -89,10 +35,11 @@ constexpr PlayaMapConfig kPlayaMapConfig = {
     }},
 };
 
-// Generated from GeoJSON published by BMorg. 
+// 2023 bathroom locations.
+// Generated from GeoJSON published by BMorg.
 // https://innovate.burningman.org/datasets-page/
 // 'Portable Toilets.json'
-constexpr std::array<LatLon, 42> kBathroomLocations = {{
+constexpr std::array<LatLon, 42> kBathroomLocations2023 = {{
     {40.78148727096226, -119.19194430573732},
     {40.779623335561965, -119.18768876029635},
     {40.779227875508674, -119.19324827130822},
@@ -136,3 +83,63 @@ constexpr std::array<LatLon, 42> kBathroomLocations = {{
     {40.78938326092272, -119.20671617278813},
     {40.78395545642809, -119.19954685881262},
 }};
+
+constexpr char kConfigFilepath[] = "./config/2023/map_config.json";
+
+class FileReadAdapter {
+ public:
+  FileReadAdapter(FILE* f) : f_(f) {}
+  int read() { return fgetc(f_); }
+  size_t readBytes(char* buffer, size_t length) {
+    return fread(buffer, 1, length, f_);
+  }
+
+ private:
+  FILE* f_;
+};
+}  // namespace
+
+UsbStorage::UsbStorage() : default_map_config_(kPlayaMapConfig2023) {}
+
+void UsbStorage::Start() {
+  FILE* config_file = fopen(kConfigFilepath, "r");
+  if (config_file == nullptr) {
+    std::cout << "Cannot open config file\n";
+    file_config_valid_ = false;
+    fclose(config_file);
+    return;
+  }
+
+  std::cout << "Opened config file\n";
+
+  FileReadAdapter read_adapter{config_file};
+
+  StaticJsonDocument<10000> doc;
+  DeserializationError e = deserializeJson(doc, read_adapter);
+  fclose(config_file);
+
+  if (e) {
+    std::cout << "JSON deserialization error\n";
+  } else {
+    strncpy(file_map_config_.name, doc["map"]["name"],
+            sizeof(PlayaMapConfig::name));
+    file_map_config_.center.lat = doc["map"]["center"][0];
+    file_map_config_.center.lon = doc["map"]["center"][1];
+    file_map_config_.rotation_deg = doc["map"]["rotation_deg"];
+
+    for (size_t i = 0; i < doc["map"]["roads"].size(); ++i) {
+      const char* road_name = doc["map"]["roads"][i]["name"].as<const char*>();
+      file_map_config_.roads[i].road = road_name[0];
+      file_map_config_.roads[i].radius_m =
+          feetToMeters(doc["map"]["roads"][i]["radius_ft"]);
+    }
+
+    for (size_t i = 0; i < doc["bathrooms"].size(); ++i) {
+      bathrooms_.push_back(
+          LatLon{.lat = doc["bathrooms"][i][0], .lon = doc["bathrooms"][i][1]});
+    }
+    std::cout << "Number of bathrooms in config file: " << doc["bathrooms"].size() << "\n";
+  }
+
+  file_config_valid_ = true;
+}

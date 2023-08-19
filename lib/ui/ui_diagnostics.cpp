@@ -4,7 +4,6 @@
 
 #include "coordinates.h"
 #include "lvgl.h"
-#include "playa_config.h"
 #include "power.h"
 
 namespace {
@@ -36,7 +35,8 @@ float inline degCtoF(float deg_c) { return (9.0 / 5.0) * deg_c + 32; }
 
 }  // namespace
 
-UiDiagnostics::UiDiagnostics(Power& power) : UiBase(), power_(power) {
+UiDiagnostics::UiDiagnostics(const PlayaMapConfig& map_config, Power& power)
+    : UiBase(), map_config_(map_config), power_(power) {
   SetTitle("DIAGNOSTICS");
 
   static lv_style_t text_style;
@@ -117,10 +117,10 @@ Brng:%+4d deg
       constexpr char format[] = R"( Map:%s
 Cntr:%.6f
      %.6f
-  Bathrms:%zu)";
-      snprintf(text, sizeof(text), format, kPlayaMapConfig.name,
-               kPlayaMapConfig.center.lat, kPlayaMapConfig.center.lon,
-               kBathroomLocations.size());
+  Bathrms:%u)";
+      snprintf(text, sizeof(text), format, map_config_.name,
+               map_config_.center.lat, map_config_.center.lon, 1);
+              //  kBathroomLocations.size());
       break;
     }
   }

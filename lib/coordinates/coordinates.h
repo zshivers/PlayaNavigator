@@ -39,7 +39,7 @@ struct GpsInfo {
 
 // Important features that define the geometry of the map.
 struct PlayaMapConfig {
-  const char name[16];
+  char name[16] = {};
   LatLon center;                // Central point all of BM is laid out around.
   double rotation_deg;          // Rotation from North to 12:00.
   struct RoadConfig {

@@ -16,11 +16,12 @@
 // If GPS is not availble, "No GPS" is shown instead of location.
 class UiLocation : public UiBase {
  public:
-  UiLocation();
+  UiLocation(const PlayaMapConfig& map_config);
   void update(GpsInfo gps_info);
 
  private:
   void EnableBmLogoAnimation(bool enable);
+  const PlayaMapConfig& map_config_;
   lv_obj_t* location_text_;
   lv_obj_t* animimg_;
 };

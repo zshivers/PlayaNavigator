@@ -1,5 +1,6 @@
 #pragma once
 #include <cinttypes>
+#include <vector>
 
 #include "backlight.h"
 #include "coordinates.h"
@@ -19,7 +20,7 @@
 // Waypoints are stored in non-volatile storage via `waypoint_storage.h`.
 class UiWaypoint : public UiBase {
  public:
-  UiWaypoint(Backlight* backlight);
+  UiWaypoint(const PlayaMapConfig& map_config, const std::vector<LatLon>& bathrooms, Backlight* backlight);
 
   enum class Mode { kWaypoints, kNearestBathroom };
   void SetMode(Mode mode) { mode_ = mode; }
@@ -39,8 +40,11 @@ class UiWaypoint : public UiBase {
   void UpdateAddressText(MaybeValid<LatLon> waypoint);
   void EstimateDirection(const GpsInfo& gps_info);
 
-  WaypointStorage ws_;
+  const PlayaMapConfig& map_config_;
+  const std::vector<LatLon>& bathrooms_;
   Backlight* backlight_;
+
+  WaypointStorage ws_;
   GpsInfo gps_info_;
 
   constexpr static uint8_t kMaxTotalWaypoints = 5;

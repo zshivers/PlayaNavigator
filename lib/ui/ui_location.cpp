@@ -2,7 +2,6 @@
 
 #include "coordinates.h"
 #include "lvgl.h"
-#include "playa_config.h"
 #include "power.h"
 
 LV_IMG_DECLARE(SpinningMan00);
@@ -36,7 +35,7 @@ const lv_img_dsc_t* kSpinningManAnimationImages[20] = {
 };
 }
 
-UiLocation::UiLocation() : UiBase() {
+UiLocation::UiLocation(const PlayaMapConfig& map_config) : UiBase(), map_config_(map_config) {
   SetTitle("LOCATION");
 
   location_text_ = lv_label_create(content_);
@@ -67,7 +66,6 @@ UiLocation::UiLocation() : UiBase() {
 
   animimg_ = lv_animimg_create(content_);
   lv_obj_center(animimg_);
-  // lv_animimg_set_src(animimg_, (lv_img_dsc_t**)kSpinningManAnimationImages, 20);
   lv_animimg_set_src(animimg_, (const void**)kSpinningManAnimationImages, 20);
   lv_animimg_set_duration(animimg_, 2000);
   lv_animimg_set_repeat_count(animimg_, LV_ANIM_REPEAT_INFINITE);
@@ -96,7 +94,7 @@ void UiLocation::update(GpsInfo gps_info) {
   }
 
   const PlayaAddress address =
-      LatLonToAddress(kPlayaMapConfig, gps_info.location);
+      LatLonToAddress(map_config_, gps_info.location);
 
   // If inside the promenade for the man, show the rotating man animation!
   const bool at_the_man = address.radius_m < feetToMeters(400.0);

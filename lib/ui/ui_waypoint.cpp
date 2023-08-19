@@ -5,7 +5,6 @@
 
 #include "coordinates.h"
 #include "lvgl.h"
-#include "playa_config.h"
 #include "waypoint_storage.h"
 
 namespace {
@@ -39,10 +38,10 @@ void translate_points(lv_point_t points[], int count, lv_point_t translation) {
   }
 }
 
-LatLon FindNearestBathroom(LatLon current_location) {
+LatLon FindNearestBathroom(const std::vector<LatLon>& bathrooms, LatLon current_location) {
   double closest_distance = std::numeric_limits<double>::infinity();
   LatLon closest_bathroom;
-  for (const LatLon bathroom : kBathroomLocations) {
+  for (const LatLon bathroom : bathrooms) {
     const double distance = distanceBetween(current_location, bathroom);
     if (distance < closest_distance) {
       closest_distance = distance;
@@ -105,7 +104,8 @@ void UiWaypoint::DrawCircle() {
                      360, &dsc);
 }
 
-UiWaypoint::UiWaypoint(Backlight* backlight) : UiBase(), backlight_(backlight) {
+UiWaypoint::UiWaypoint(const PlayaMapConfig& map_config, const std::vector<LatLon>& bathrooms, Backlight* backlight)
+    : UiBase(), map_config_(map_config), bathrooms_(bathrooms), backlight_(backlight) {
   static lv_style_t container_style;
   lv_style_init(&container_style);
   lv_style_set_pad_column(&container_style, 0);
@@ -181,7 +181,7 @@ void UiWaypoint::Update(GpsInfo gps_info) {
       return;
     }
   } else {
-    waypoint = MakeValid<LatLon>(FindNearestBathroom(gps_info.location));
+    waypoint = MakeValid<LatLon>(FindNearestBathroom(bathrooms_, gps_info.location));
   }
 
   // Display distance.
@@ -214,7 +214,7 @@ void UiWaypoint::Update(GpsInfo gps_info) {
       course_diff += 360.0;
 
     if (distance_ft < kMinDistanceToShowDirection_m) {
-      // Direction information is not very stable if waypoint is very close. 
+      // Direction information is not very stable if waypoint is very close.
       // Just show a circle instead of a direction arrow.
       DrawCircle();
     } else {
@@ -247,7 +247,7 @@ void UiWaypoint::UpdateAddressText(MaybeValid<LatLon> waypoint) {
     lv_label_set_text(address_label_, "");
     return;
   }
-  const PlayaAddress address = LatLonToAddress(kPlayaMapConfig, waypoint.value);
+  const PlayaAddress address = LatLonToAddress(map_config_, waypoint.value);
   char text[50];
   if (address.road.valid) {
     // If on a road, show radial and the road letter.

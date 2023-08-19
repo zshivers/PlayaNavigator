@@ -15,7 +15,7 @@
 
 class Ui {
  public:
-  Ui(Power& power, Backlight* backlight);
+  Ui(const PlayaMapConfig& map_config, const std::vector<LatLon>& bathrooms, Power& power, Backlight* backlight);
   enum Mode {
     kSplash,
     kLocation,

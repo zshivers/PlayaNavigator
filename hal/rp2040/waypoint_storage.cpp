@@ -7,9 +7,9 @@
 
 namespace {
 constexpr uint8_t kValidKey = 0xAA;
-constexpr uint32_t kFlashOffset = 0x100000;
 constexpr size_t kSectorSize = 4096;  // Minimum bytes to erase at once.
 constexpr size_t kPageSize = 256;     // Minimimum bytes to program at once.
+constexpr uint32_t kFlashOffset = 0x100000 - 10 * kSectorSize;
 struct SingleWaypoint {
   uint8_t valid;
   LatLon waypoint;

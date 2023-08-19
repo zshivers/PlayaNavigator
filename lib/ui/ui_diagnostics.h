@@ -10,7 +10,7 @@
 // Board diagnostics: Battery voltage, charging state, USB plugged state.
 class UiDiagnostics : public UiBase {
  public:
-  UiDiagnostics(Power& power);
+  UiDiagnostics(const PlayaMapConfig& map_config, Power& power);
   void update(uint32_t millis, GpsInfo gps_info);
   void GoToNextPage() {
     if (page_ == kGps1) page_ = kGps2;
@@ -20,6 +20,7 @@ class UiDiagnostics : public UiBase {
   }
 
  private:
+  const PlayaMapConfig& map_config_;
   Power& power_;
   enum Page { kGps1, kGps2, kBattery, kMap } page_ = kGps1;
   lv_obj_t* diagnostics_text_;
