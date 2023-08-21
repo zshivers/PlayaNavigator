@@ -4,7 +4,6 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <hardware/flash.h>
-#include <hardware/sync.h>
 
 #include "FlashIAPBlockDevice.h"
 #include "PluggableUSBMSD.h"
@@ -91,8 +90,11 @@ constexpr std::array<LatLon, 42> kBathroomLocations2023 = {{
 // Total RP2040 Flash memory size = 2048 KiB
 constexpr int kFlashTotalBytes = 2048 * 1024;
 constexpr int kFlashOffset = 1024 * 1024;
-constexpr int kUsbFsSizeBytes = 100 * 1024;  // 100 KiB
-static_assert(kFlashOffset + kUsbFsSizeBytes < kFlashTotalBytes);
+// Set to half the flash size. If set to other values, the filesystem reformat()
+// would not work, and the drive would not be recognized.
+// TODO - debug the problem and reduce the size of the disk.
+constexpr int kUsbFsSizeBytes = 1024 * 1024;
+static_assert(kFlashOffset + kUsbFsSizeBytes <= kFlashTotalBytes);
 constexpr char kPlayaMapConfigFilename[] = "/fs/map_config.json";
 
 class FileReadAdapter {
@@ -113,19 +115,25 @@ UsbStorage::UsbStorage()
     : fs_("fs"),
       bd_(XIP_BASE + kFlashOffset, kUsbFsSizeBytes),
       usbmd_(&bd_),
-      default_map_config_(kPlayaMapConfig2023) {}
+      default_map_config_(kPlayaMapConfig2023) {
+  for (size_t i = 0; i < kBathroomLocations2023.size(); ++i)
+    bathrooms_.push_back(kBathroomLocations2023[i]);
+}
 
 void UsbStorage::Start() {
+  int bd_error = bd_.init();
+  Serial.println("Block device init() return " + String(bd_error));
+
   int error = fs_.mount(&bd_);
   if (error) {
     Serial.println("Filesystem mount failed, reformatting");
-    fs_.reformat(&bd_);
+    int reformat_error = fs_.reformat(&bd_);
+    Serial.println("Reformat finished, error = " + String(reformat_error));
   }
 
   map_file = fopen(kPlayaMapConfigFilename, "r");
   if (map_file == nullptr) {
-    Serial.println("Cannot open file");
-    usb_config_valid_ = false;
+    Serial.println("Cannot open configuration file");
     fclose(map_file);
     return;
   }
@@ -140,25 +148,29 @@ void UsbStorage::Start() {
 
   if (e) {
     Serial.println("JSON deserialization error");
-  } else {
-    strncpy(usb_map_config_.name, doc["map"]["name"],
-            sizeof(PlayaMapConfig::name));
-    usb_map_config_.center.lat = doc["map"]["center"][0];
-    usb_map_config_.center.lon = doc["map"]["center"][1];
-    usb_map_config_.rotation_deg = doc["map"]["rotation_deg"];
+    return;
+  }
 
-    for (size_t i = 0; i < doc["map"]["roads"].size(); ++i) {
-      const char* road_name = doc["map"]["roads"][i]["name"].as<const char*>();
-      usb_map_config_.roads[i].road = road_name[0];
-      usb_map_config_.roads[i].radius_m =
-          feetToMeters(doc["map"]["roads"][i]["radius_ft"]);
-    }
+  strncpy(usb_map_config_.name, doc["map"]["name"],
+          sizeof(PlayaMapConfig::name));
+  usb_map_config_.center.lat = doc["map"]["center"][0];
+  usb_map_config_.center.lon = doc["map"]["center"][1];
+  usb_map_config_.rotation_deg = doc["map"]["rotation_deg"];
 
+  for (size_t i = 0; i < doc["map"]["roads"].size(); ++i) {
+    const char* road_name = doc["map"]["roads"][i]["name"].as<const char*>();
+    usb_map_config_.roads[i].road = road_name[0];
+    usb_map_config_.roads[i].radius_m =
+        feetToMeters(doc["map"]["roads"][i]["radius_ft"]);
+  }
+
+  if (doc["bathrooms"].size() != 0) {
+    bathrooms_.clear();  // Erase default bathrooms set in constructor.
     for (size_t i = 0; i < doc["bathrooms"].size(); ++i) {
       bathrooms_.push_back(
           LatLon{.lat = doc["bathrooms"][i][0], .lon = doc["bathrooms"][i][1]});
     }
   }
 
-  usb_config_valid_ = true;
+  usb_config_valid_ = PlayaMapConfigValid(usb_map_config_);
 }
