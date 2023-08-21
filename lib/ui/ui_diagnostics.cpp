@@ -116,11 +116,9 @@ Brng:%+4d deg
     case kMap: {
       constexpr char format[] = R"( Map:%s
 Cntr:%.6f
-     %.6f
-  Bathrms:%u)";
+     %.6f)";
       snprintf(text, sizeof(text), format, map_config_.name,
-               map_config_.center.lat, map_config_.center.lon, 1);
-              //  kBathroomLocations.size());
+               map_config_.center.lat, map_config_.center.lon);
       break;
     }
   }

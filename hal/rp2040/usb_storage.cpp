@@ -40,7 +40,7 @@ constexpr PlayaMapConfig kPlayaMapConfig2023 = {
 };
 
 // 2023 bathroom locations.
-// Generated from GeoJSON published by BMorg. 
+// Generated from GeoJSON published by BMorg.
 // https://innovate.burningman.org/datasets-page/
 // 'Portable Toilets.json'
 constexpr std::array<LatLon, 42> kBathroomLocations2023 = {{
@@ -110,7 +110,10 @@ class FileReadAdapter {
 }  // namespace
 
 UsbStorage::UsbStorage()
-    : fs_("fs"), bd_(XIP_BASE + kFlashOffset, kUsbFsSizeBytes), usbmd_(&bd_), default_map_config_(kPlayaMapConfig2023) {}
+    : fs_("fs"),
+      bd_(XIP_BASE + kFlashOffset, kUsbFsSizeBytes),
+      usbmd_(&bd_),
+      default_map_config_(kPlayaMapConfig2023) {}
 
 void UsbStorage::Start() {
   int error = fs_.mount(&bd_);
@@ -138,7 +141,8 @@ void UsbStorage::Start() {
   if (e) {
     Serial.println("JSON deserialization error");
   } else {
-    strncpy(usb_map_config_.name, doc["map"]["name"], sizeof(PlayaMapConfig::name));
+    strncpy(usb_map_config_.name, doc["map"]["name"],
+            sizeof(PlayaMapConfig::name));
     usb_map_config_.center.lat = doc["map"]["center"][0];
     usb_map_config_.center.lon = doc["map"]["center"][1];
     usb_map_config_.rotation_deg = doc["map"]["rotation_deg"];
@@ -146,7 +150,8 @@ void UsbStorage::Start() {
     for (size_t i = 0; i < doc["map"]["roads"].size(); ++i) {
       const char* road_name = doc["map"]["roads"][i]["name"].as<const char*>();
       usb_map_config_.roads[i].road = road_name[0];
-      usb_map_config_.roads[i].radius_m = feetToMeters(doc["map"]["roads"][i]["radius_ft"]);
+      usb_map_config_.roads[i].radius_m =
+          feetToMeters(doc["map"]["roads"][i]["radius_ft"]);
     }
 
     for (size_t i = 0; i < doc["bathrooms"].size(); ++i) {
@@ -156,6 +161,4 @@ void UsbStorage::Start() {
   }
 
   usb_config_valid_ = true;
-
-  // usbmd_.process();
 }

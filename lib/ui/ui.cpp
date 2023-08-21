@@ -16,16 +16,13 @@ constexpr uint32_t kShutdownWarningTimeout_ms = 10 * 1000;  // 30 sec.
 
 Ui::Ui(const PlayaMapConfig& map_config, const std::vector<LatLon>& bathrooms,
        Power& power, Backlight* backlight)
-    : ui_location_(map_config),
+    : power_(power),
+      backlight_(backlight),
+      ui_location_(map_config),
       ui_waypoint_(map_config, bathrooms, backlight),
       ui_diagnostics_(map_config, power_),
-      power_(power),
-      backlight_(backlight),
       auto_shutdown_(power) {
   SetMode(kSplash);
-  // SetMode(kLocation);
-  // SetMode(kBathroom);
-  // ui_waypoint_.SetMode(UiWaypoint::Mode::kNearestBathroom);
 }
 
 void Ui::update(uint32_t millis) {

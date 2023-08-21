@@ -34,13 +34,16 @@ class Ui {
 
  private:
   Mode mode_;
+  Power& power_;
+  Backlight* backlight_;
+
+  // Can switch to any of these different UI pages.
   UiSplash ui_splash_;
   UiLocation ui_location_;
   UiWaypoint ui_waypoint_;
   UiDiagnostics ui_diagnostics_;
   UiShutdown ui_shutdown_;
-  Power& power_;
-  Backlight* backlight_;
+
   GpsInfo gps_info_;
   AutoShutdown auto_shutdown_;
   bool first_update_ = true;

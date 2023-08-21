@@ -11,10 +11,6 @@
 #include "usb_storage.h"
 #include "waypoint_storage.h"
 
-#ifdef PLATFORM_NATIVE
-#include <iostream>
-#endif
-
 Ui* ui;
 Gps gps;
 Power power;
