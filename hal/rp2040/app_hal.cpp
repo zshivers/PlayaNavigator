@@ -6,6 +6,7 @@
 #include "hardware/gpio.h"
 #include "hardware/pll.h"
 #include "hardware/spi.h"
+#include "hardware/watchdog.h"
 #include "lvgl.h"
 #include "pico/time.h"
 #include "power.h"
@@ -62,6 +63,20 @@ void clock_setup() {
 }
 
 void hal_setup(void) {
+  watchdog_enable(0x7fffff, 1);  // Using max timeout = ~8.3 sec
+  if (watchdog_caused_reboot()) {
+    // Make the screen red, to indicate the watchdog reboot happened.
+    gpio_set_function(kBacklightRedPin, GPIO_FUNC_SIO);
+    gpio_set_dir(kBacklightRedPin, GPIO_OUT);
+    gpio_put(kBacklightRedPin, true);
+    sleep_ms(2000);
+    // Turn off the power.
+    gpio_set_function(kPowerEnablePin, GPIO_FUNC_SIO);
+    gpio_set_dir(kPowerEnablePin, GPIO_OUT);
+    gpio_put(kPowerEnablePin, false);
+    sleep_ms(2000);
+  }
+
   clock_setup();
 
   // Built-in LED off to save power.
@@ -92,6 +107,7 @@ void hal_setup(void) {
 }
 
 void hal_loop(void) {
+  watchdog_update();
   lv_task_handler();
   lv_tick_inc(5);
   sleep_ms(5);
