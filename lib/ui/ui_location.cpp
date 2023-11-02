@@ -35,7 +35,8 @@ const lv_img_dsc_t* kSpinningManAnimationImages[20] = {
 };
 }
 
-UiLocation::UiLocation(const PlayaMapConfig& map_config) : UiBase(), map_config_(map_config) {
+UiLocation::UiLocation(const PlayaMapConfig& map_config)
+    : UiBase(), map_config_(map_config) {
   SetTitle("LOCATION");
 
   location_text_ = lv_label_create(content_);
@@ -93,8 +94,7 @@ void UiLocation::update(GpsInfo gps_info) {
     return;
   }
 
-  const PlayaAddress address =
-      LatLonToAddress(map_config_, gps_info.location);
+  const PlayaAddress address = LatLonToAddress(map_config_, gps_info.location);
 
   // If inside the promenade for the man, show the rotating man animation!
   const bool at_the_man = address.radius_m < feetToMeters(400.0);

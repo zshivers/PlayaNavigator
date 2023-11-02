@@ -138,7 +138,8 @@ void UsbStorage::Start() {
       bathrooms_.push_back(
           LatLon{.lat = doc["bathrooms"][i][0], .lon = doc["bathrooms"][i][1]});
     }
-    std::cout << "Number of bathrooms in config file: " << doc["bathrooms"].size() << "\n";
+    std::cout << "Number of bathrooms in config file: "
+              << doc["bathrooms"].size() << "\n";
   }
 
   file_config_valid_ = true;

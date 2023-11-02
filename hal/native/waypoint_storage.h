@@ -10,7 +10,7 @@ class WaypointStorage {
   void Write(int index, LatLon waypoint);
   void EraseAll();
 
-private:
+ private:
   struct SingleWaypoint {
     uint8_t valid;
     LatLon waypoint;

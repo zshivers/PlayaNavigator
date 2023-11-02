@@ -14,12 +14,9 @@ Backlight::Backlight(int led_w_pin, int led_r_pin, int led_g_pin, int led_b_pin)
     : led_w_pin_(led_w_pin),
       led_r_pin_(led_r_pin),
       led_g_pin_(led_g_pin),
-      led_b_pin_(led_b_pin) {
-}
+      led_b_pin_(led_b_pin) {}
 
-void Backlight::SetBrightness(float brightness) {
-  brightness_ = brightness;
-}
+void Backlight::SetBrightness(float brightness) { brightness_ = brightness; }
 
 void Backlight::SetColor(uint8_t w, uint8_t r, uint8_t g, uint8_t b) {
   w_ = static_cast<float>(w) / 255.0f;

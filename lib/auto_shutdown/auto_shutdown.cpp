@@ -46,9 +46,9 @@ void AutoShutdown::Update(uint32_t millis, uint32_t last_interaction_time_ms,
       if (location.lon > lon_max) lon_max = location.lon;
     }
 
-    // This is a very crude approximation, but good tradeoff for low speeds.
-    const double x_delta_m = abs(111111.0 * (lat_max - lat_min));
-    const double y_delta_m = abs(111111.0 * (lon_max - lon_min));
+    // This is a very crude approximation, but good∏ tradeoff for low speeds.
+    const double x_delta_m = std::abs(111111.0 * (lat_max - lat_min));
+    const double y_delta_m = std::abs(111111.0 * (lon_max - lon_min));
     location_update_ms_ = gps_info.update_time;
 
     moving = !(x_delta_m < kMaxGpsLocationSpread_m &&

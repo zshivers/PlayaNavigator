@@ -40,8 +40,8 @@ struct GpsInfo {
 // Important features that define the geometry of the map.
 struct PlayaMapConfig {
   char name[16] = {};
-  LatLon center;                // Central point all of BM is laid out around.
-  double rotation_deg;          // Rotation from North to 12:00.
+  LatLon center;        // Central point all of BM is laid out around.
+  double rotation_deg;  // Rotation from North to 12:00.
   struct RoadConfig {
     char road;        // Single letter for road.
     double radius_m;  // Radius from the center.
@@ -77,8 +77,7 @@ PlayaCoords LatLonToPlayaCoords(const PlayaMapConfig& pmc, const LatLon& in);
 // o'clock.
 bool IsAddressable(const PlayaMapConfig& pmc, const PlayaCoords& pc);
 
-PlayaAddress LatLonToAddress(const PlayaMapConfig& pmc,
-                                         const LatLon& ll);
+PlayaAddress LatLonToAddress(const PlayaMapConfig& pmc, const LatLon& ll);
 
 // Return the approximate distance in meters between two locations.
 double distanceBetween(const LatLon& point1, const LatLon& point2);
@@ -86,7 +85,7 @@ double distanceBetween(const LatLon& point1, const LatLon& point2);
 // Return the course in degrees from point1 to point2.
 double courseTo(const LatLon& point1, const LatLon& point2);
 
-// From a center lat/lon location, offset by some amount of meters in each direction.
-// Only use for small distances.
+// From a center lat/lon location, offset by some amount of meters in each
+// direction. Only use for small distances.
 LatLon GetOffsetLocation(const LatLon& center, double delta_x_meters,
                          double delta_y_meters);

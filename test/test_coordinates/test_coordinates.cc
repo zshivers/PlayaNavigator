@@ -273,8 +273,8 @@ TEST(LatLonToAddress, ClockRoundedTo5Mins) {
 }
 
 TEST(LatLonToAddress2023, EsplanadeAnd10_2023) {
-  PlayaAddress address =
-      LatLonToAddress(kPlaya2023MapConfig, {.lat = 40.7929883, .lon = -119.2058906});
+  PlayaAddress address = LatLonToAddress(
+      kPlaya2023MapConfig, {.lat = 40.7929883, .lon = -119.2058906});
   PlayaAddress expected = {
       .hour = 10, .minute = 0, .road = MakeValid<char>('S')};
   PrintTo(address, &std::cout);
@@ -282,8 +282,8 @@ TEST(LatLonToAddress2023, EsplanadeAnd10_2023) {
 }
 
 TEST(LatLonToAddress2023, EsplanadeAnd2_2023) {
-  PlayaAddress address =
-      LatLonToAddress(kPlaya2023MapConfig, {.lat = 40.7845584, .lon = -119.1947878});
+  PlayaAddress address = LatLonToAddress(
+      kPlaya2023MapConfig, {.lat = 40.7845584, .lon = -119.1947878});
   PlayaAddress expected = {
       .hour = 2, .minute = 0, .road = MakeValid<char>('S')};
   EXPECT_TRUE(AddressEqual(address, expected));
@@ -291,8 +291,8 @@ TEST(LatLonToAddress2023, EsplanadeAnd2_2023) {
 }
 
 TEST(LatLonToAddress2023, Cand3) {
-  PlayaAddress address =
-      LatLonToAddress(kPlaya2023MapConfig, {.lat = 40.7796292, .lon = -119.1945954});
+  PlayaAddress address = LatLonToAddress(
+      kPlaya2023MapConfig, {.lat = 40.7796292, .lon = -119.1945954});
   PlayaAddress expected = {
       .hour = 3, .minute = 0, .road = MakeValid<char>('C')};
   EXPECT_TRUE(AddressEqual(address, expected));
@@ -300,8 +300,8 @@ TEST(LatLonToAddress2023, Cand3) {
 }
 
 TEST(LatLonToAddress2023, Jand6) {
-  PlayaAddress address =
-      LatLonToAddress(kPlaya2023MapConfig, {.lat = 40.7754071, .lon = -119.2177962});
+  PlayaAddress address = LatLonToAddress(
+      kPlaya2023MapConfig, {.lat = 40.7754071, .lon = -119.2177962});
   PlayaAddress expected = {
       .hour = 6, .minute = 0, .road = MakeValid<char>('J')};
   EXPECT_TRUE(AddressEqual(address, expected));
@@ -309,8 +309,8 @@ TEST(LatLonToAddress2023, Jand6) {
 }
 
 TEST(LatLonToAddress2023, Fand815) {
-  PlayaAddress address =
-      LatLonToAddress(kPlaya2023MapConfig, {.lat = 40.7914487, .lon = -119.2192866});
+  PlayaAddress address = LatLonToAddress(
+      kPlaya2023MapConfig, {.lat = 40.7914487, .lon = -119.2192866});
   PlayaAddress expected = {
       .hour = 8, .minute = 15, .road = MakeValid<char>('F')};
   EXPECT_TRUE(AddressEqual(address, expected));
@@ -352,8 +352,6 @@ TEST(GetOffsetLocation, OffsetWithKnownCoordinates30Deg) {
   EXPECT_NEAR(location.lat, 0.00781884223, kTolerance_deg);
   EXPECT_NEAR(location.lon, 0.00451425674, kTolerance_deg);
 }
-
-
 
 }  // namespace
 

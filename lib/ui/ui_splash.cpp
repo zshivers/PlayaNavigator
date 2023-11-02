@@ -38,7 +38,8 @@ UiSplash::UiSplash() {
   screen_ = lv_obj_create(nullptr);
   animimg_ = lv_animimg_create(screen_);
   lv_obj_center(animimg_);
-  lv_animimg_set_src(animimg_, (const void **)kNaviGatorAnimationImages.data(), kNaviGatorAnimationImages.size());
+  lv_animimg_set_src(animimg_, (const void **)kNaviGatorAnimationImages.data(),
+                     kNaviGatorAnimationImages.size());
   lv_animimg_set_duration(animimg_, kSplashAnimationDuration_ms);
   lv_animimg_set_repeat_count(animimg_, 1);
 }

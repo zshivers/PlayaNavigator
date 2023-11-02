@@ -1,9 +1,9 @@
 #pragma once
 
+#include "auto_shutdown.h"
 #include "coordinates.h"
 #include "lvgl.h"
 #include "ui_base.h"
-#include "auto_shutdown.h"
 
 // Shutdown screen warns the user when the device is about to shutdown.
 class UiShutdown : public UiBase {

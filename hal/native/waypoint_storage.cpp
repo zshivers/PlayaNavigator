@@ -10,13 +10,12 @@ MaybeValid<LatLon> WaypointStorage::Read(int index) {
   if (index < 0 || index > kMaxWaypoints) {
     return MakeInvalid<LatLon>({});
   }
-  
+
   if (index == 0) {
-    return MakeValid<LatLon>({37.76986115865554,-122.41195171146316});
+    return MakeValid<LatLon>({37.76986115865554, -122.41195171146316});
   }
 
-  if (waypoints_[index].valid != kValidKey)
-    return MakeInvalid<LatLon>({});
+  if (waypoints_[index].valid != kValidKey) return MakeInvalid<LatLon>({});
 
   return MakeValid<LatLon>(waypoints_[index].waypoint);
 }

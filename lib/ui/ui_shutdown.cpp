@@ -37,7 +37,8 @@ UiShutdown::UiShutdown() : UiBase() {
   lv_obj_add_style(text_, &text_style, 0);
 }
 
-void UiShutdown::update(uint32_t millis, AutoShutdown::ShutdownReason shutdown_reason) {
+void UiShutdown::update(uint32_t millis,
+                        AutoShutdown::ShutdownReason shutdown_reason) {
   switch (shutdown_reason) {
     case AutoShutdown::ShutdownReason::kBatteryLow:
       lv_label_set_text(text_, "Battery low\nShutting down");
