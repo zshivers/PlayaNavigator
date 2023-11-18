@@ -3,6 +3,7 @@
 #include <cmath>
 #include <limits>
 
+#include "conversions.h"
 #include "coordinates.h"
 #include "lvgl.h"
 #include "waypoint_storage.h"
@@ -38,7 +39,8 @@ void translate_points(lv_point_t points[], int count, lv_point_t translation) {
   }
 }
 
-LatLon FindNearestBathroom(const std::vector<LatLon>& bathrooms, LatLon current_location) {
+LatLon FindNearestBathroom(const std::vector<LatLon>& bathrooms,
+                           LatLon current_location) {
   double closest_distance = std::numeric_limits<double>::infinity();
   LatLon closest_bathroom;
   for (const LatLon bathroom : bathrooms) {
@@ -104,7 +106,8 @@ void UiWaypoint::DrawCircle() {
                      360, &dsc);
 }
 
-UiWaypoint::UiWaypoint(const PlayaMapConfig& map_config, const std::vector<LatLon>& bathrooms)
+UiWaypoint::UiWaypoint(const PlayaMapConfig& map_config,
+                       const std::vector<LatLon>& bathrooms)
     : UiBase(), map_config_(map_config), bathrooms_(bathrooms) {
   static lv_style_t container_style;
   lv_style_init(&container_style);
@@ -180,7 +183,8 @@ void UiWaypoint::Update(GpsInfo gps_info) {
       return;
     }
   } else {
-    waypoint = MakeValid<LatLon>(FindNearestBathroom(bathrooms_, gps_info.location));
+    waypoint =
+        MakeValid<LatLon>(FindNearestBathroom(bathrooms_, gps_info.location));
   }
 
   // Display distance.

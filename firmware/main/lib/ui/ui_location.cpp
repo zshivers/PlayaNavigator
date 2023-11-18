@@ -1,5 +1,6 @@
 #include "ui_location.h"
 
+#include "conversions.h"
 #include "coordinates.h"
 #include "lvgl.h"
 #include "power.h"

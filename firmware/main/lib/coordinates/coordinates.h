@@ -4,19 +4,8 @@
 #include <cstdint>
 #include <string>
 
+#include "conversions.h"
 #include "maybe_valid.h"
-
-constexpr double radToDeg(const double radians) {
-  return radians * (180.0 / 3.14159265359);
-}
-constexpr double degToRad(const double deg) {
-  return deg * (3.14159265359 / 180.0);
-}
-constexpr double metersToFeet(const double meters) { return meters * 3.281; }
-constexpr double feetToMeters(const double feet) { return feet / 3.281; }
-constexpr double feetToMiles(const double feet) { return feet / 5280.0; }
-constexpr double milesToFeet(const double miles) { return miles * 5280.0; }
-constexpr double metersToMiles(const double feet) { return feet / 1609.34; }
 
 // Latitude and Longitude in decimal format.
 // +Lat = N, -Lat = S
@@ -62,13 +51,14 @@ struct PlayaCoords {
 struct PlayaAddress {
   uint8_t hour;
   uint8_t minute;
-  double radius_m;
+  double radius_m;  // Distance from center of the playa, in meters.
   MaybeValid<char> road;
 };
 
 // Returns true if the map configuration is valid.
 bool PlayaMapConfigValid(const PlayaMapConfig& pmc);
 
+// Convert a LatLon coordinate into radius/angle format.
 PlayaCoords LatLonToPlayaCoords(const PlayaMapConfig& pmc, const LatLon& in);
 
 // Does the supplied PlayaCoords have an address?
@@ -77,6 +67,9 @@ PlayaCoords LatLonToPlayaCoords(const PlayaMapConfig& pmc, const LatLon& in);
 // o'clock.
 bool IsAddressable(const PlayaMapConfig& pmc, const PlayaCoords& pc);
 
+// Convert a LatLon coordinate into a PlayaAddress, which is more human-redable.
+// If the location lies within the area of the city with roads, the result will
+// have the `road` field populated.
 PlayaAddress LatLonToAddress(const PlayaMapConfig& pmc, const LatLon& ll);
 
 // Return the approximate distance in meters between two locations.
@@ -85,7 +78,7 @@ double distanceBetween(const LatLon& point1, const LatLon& point2);
 // Return the course in degrees from point1 to point2.
 double courseTo(const LatLon& point1, const LatLon& point2);
 
-// From a center lat/lon location, offset by some amount of meters in each
-// direction. Only use for small distances.
+// Return a LatLon coordinate that is offset by some x,y distance from `center`.
+// Only use for small distances.
 LatLon GetOffsetLocation(const LatLon& center, double delta_x_meters,
                          double delta_y_meters);
