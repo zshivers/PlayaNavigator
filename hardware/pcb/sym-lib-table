@@ -1,0 +1,5 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "JST-PH")(type "KiCad")(uri "/Users/zack/Downloads/S2B-PH-SM4-TB/S2B-PH-SM4-TB.kicad_sym")(options "")(descr ""))
+  (lib (name "Pico")(type "KiCad")(uri "/Users/zack/Downloads/MCU_RaspberryPi_and_Boards.kicad_sym")(options "")(descr ""))
+)

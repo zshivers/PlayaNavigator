@@ -1,0 +1,5 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "JST-PH")(type "KiCad")(uri "${KIPRJMOD}/parts/S2B-PH-SM4-TB")(options "")(descr ""))
+  (lib (name "Pico")(type "KiCad")(uri "${KIPRJMOD}/parts/RP-Pico Libraries/MCU_RaspberryPi_and_Boards.pretty")(options "")(descr ""))
+)
