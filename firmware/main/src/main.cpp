@@ -14,7 +14,8 @@
 Ui* ui;
 Gps gps;
 Power power;
-Backlight* backlight;
+Backlight backlight(kBacklightWhitePin, kBacklightRedPin, kBacklightGreenPin,
+                    kBacklightBluePin);
 UsbStorage usb_storage;
 OneButton button_a(kButtonAPin);
 OneButton button_b(kButtonBPin);
@@ -47,10 +48,9 @@ void setup() {
   hal_setup();
 
   usb_storage.Start();
+  backlight.Start();
+  backlight.SetColor(1.0, 0, 0, 0);
 
-  backlight = new Backlight(kBacklightWhitePin, kBacklightRedPin,
-                            kBacklightGreenPin, kBacklightBluePin);
-  backlight->SetColor(1.0, 0, 0, 0);
   ui = new Ui(usb_storage.GetPlayaMapConfig(), usb_storage.GetBathrooms(),
               power, backlight);
 

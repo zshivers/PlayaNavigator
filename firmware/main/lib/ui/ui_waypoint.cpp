@@ -104,8 +104,8 @@ void UiWaypoint::DrawCircle() {
                      360, &dsc);
 }
 
-UiWaypoint::UiWaypoint(const PlayaMapConfig& map_config, const std::vector<LatLon>& bathrooms, Backlight* backlight)
-    : UiBase(), map_config_(map_config), bathrooms_(bathrooms), backlight_(backlight) {
+UiWaypoint::UiWaypoint(const PlayaMapConfig& map_config, const std::vector<LatLon>& bathrooms)
+    : UiBase(), map_config_(map_config), bathrooms_(bathrooms) {
   static lv_style_t container_style;
   lv_style_init(&container_style);
   lv_style_set_pad_column(&container_style, 0);
@@ -156,7 +156,6 @@ UiWaypoint::UiWaypoint(const PlayaMapConfig& map_config, const std::vector<LatLo
 
 void UiWaypoint::Update(GpsInfo gps_info) {
   if (mode_ == Mode::kWaypoints) {
-    backlight_->SetColor(1.0, 0, 0, 0);
     SetTitle(waypoint_names_[current_waypoint_index_]);
   } else {
     SetTitle("BATHROOM");

@@ -14,7 +14,7 @@
 class Ui {
  public:
   Ui(const PlayaMapConfig& map_config, const std::vector<LatLon>& bathrooms,
-     Power& power, Backlight* backlight);
+     Power& power, Backlight& backlight);
   enum Mode {
     kSplash,
     kLocation,
@@ -35,7 +35,7 @@ class Ui {
  private:
   Mode mode_;
   Power& power_;
-  Backlight* backlight_;
+  Backlight& backlight_;
 
   // Can switch to any of these different UI pages.
   UiSplash ui_splash_;

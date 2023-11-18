@@ -20,7 +20,7 @@
 // Waypoints are stored in non-volatile storage via `waypoint_storage.h`.
 class UiWaypoint : public UiBase {
  public:
-  UiWaypoint(const PlayaMapConfig& map_config, const std::vector<LatLon>& bathrooms, Backlight* backlight);
+  UiWaypoint(const PlayaMapConfig& map_config, const std::vector<LatLon>& bathrooms);
 
   enum class Mode { kWaypoints, kNearestBathroom };
   void SetMode(Mode mode) { mode_ = mode; }
@@ -42,7 +42,6 @@ class UiWaypoint : public UiBase {
 
   const PlayaMapConfig& map_config_;
   const std::vector<LatLon>& bathrooms_;
-  Backlight* backlight_;
 
   WaypointStorage ws_;
   GpsInfo gps_info_;

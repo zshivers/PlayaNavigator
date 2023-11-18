@@ -16,6 +16,8 @@ Backlight::Backlight(int led_w_pin, int led_r_pin, int led_g_pin, int led_b_pin)
       led_g_pin_(led_g_pin),
       led_b_pin_(led_b_pin) {}
 
+void Backlight::Start() {}
+
 void Backlight::SetBrightness(float brightness) { brightness_ = brightness; }
 
 void Backlight::SetColor(uint8_t w, uint8_t r, uint8_t g, uint8_t b) {

@@ -15,11 +15,11 @@
 constexpr uint32_t kShutdownWarningTimeout_ms = 10 * 1000;  // 30 sec.
 
 Ui::Ui(const PlayaMapConfig& map_config, const std::vector<LatLon>& bathrooms,
-       Power& power, Backlight* backlight)
+       Power& power, Backlight& backlight)
     : power_(power),
       backlight_(backlight),
       ui_location_(map_config),
-      ui_waypoint_(map_config, bathrooms, backlight),
+      ui_waypoint_(map_config, bathrooms),
       ui_diagnostics_(map_config, power_),
       auto_shutdown_(power) {
   SetMode(kSplash);
@@ -96,7 +96,7 @@ void Ui::ButtonPress(Ui::Button button) {
       constexpr std::array<float, 4> kBrightnessSteps = {0, 0.3, 0.45, 0.7};
       brightness_index_++;
       if (brightness_index_ >= kBrightnessSteps.size()) brightness_index_ = 0;
-      backlight_->SetBrightness(kBrightnessSteps[brightness_index_]);
+      backlight_.SetBrightness(kBrightnessSteps[brightness_index_]);
       break;
     }
     default:

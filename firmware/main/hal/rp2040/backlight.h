@@ -5,6 +5,8 @@
 class Backlight {
  public:
   Backlight(int led_white_pin, int led_r_pin, int led_g_pin, int led_b_pin);
+
+  void Start();
   
   // Brightness in range [0.0, 1.0].
   void SetBrightness(float brightness);
